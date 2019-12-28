@@ -40,7 +40,7 @@ let
       "systemd-udevd-kernel.socket"
       "systemd-udevd.service"
       "systemd-udev-settle.service"
-      "systemd-udev-trigger.service"
+      # "systemd-udev-trigger.service"
       # hwdb.bin is managed by NixOS
       # "systemd-hwdb-update.service"
 
@@ -73,7 +73,7 @@ let
       "systemd-journald.service"
       "systemd-journal-flush.service"
       "systemd-journal-catalog-update.service"
-      "systemd-journald-audit.socket"
+      # "systemd-journald-audit.socket"
       "systemd-journald-dev-log.socket"
       "syslog.socket"
 
@@ -101,7 +101,7 @@ let
       "dev-hugepages.mount"
       "dev-mqueue.mount"
       "sys-fs-fuse-connections.mount"
-      "sys-kernel-config.mount"
+      # "sys-kernel-config.mount"
       "sys-kernel-debug.mount"
 
       # Maintaining state across reboots.
