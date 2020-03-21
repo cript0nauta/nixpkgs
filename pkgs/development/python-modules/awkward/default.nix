@@ -11,11 +11,11 @@
 
 buildPythonPackage rec {
   pname = "awkward";
-  version = "0.12.16";
+  version = "0.12.20";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "df5380b96dc9c1b129e68057578e4a2d42d9b73a0ae97ff263a9072baf8f7a5e";
+    sha256 = "13494pnzz68qfnx17975h4c5l15idgg7wxl9r86q7jp5s1pphvb3";
   };
 
   nativeBuildInputs = [ pytestrunner ];

@@ -43,7 +43,7 @@ with stdenv.lib;
 with builtins;
 
 let majorVersion = "8";
-    version = "${majorVersion}.3.0";
+    version = "${majorVersion}.4.0";
 
     inherit (stdenv) buildPlatform hostPlatform targetPlatform;
 
@@ -70,13 +70,14 @@ let majorVersion = "8";
 in
 
 stdenv.mkDerivation ({
-  name = "${crossNameAddon}${name}${if stripped then "" else "-debug"}-${version}";
+  pname = "${crossNameAddon}${name}${if stripped then "" else "-debug"}";
+  inherit version;
 
   builder = ../builder.sh;
 
   src = fetchurl {
     url = "mirror://gcc/releases/gcc-${version}/gcc-${version}.tar.xz";
-    sha256 = "0b3xv411xhlnjmin2979nxcbnidgvzqdf4nbhix99x60dkzavfk4";
+    sha256 = "1m1d3gfix56w4aq8myazzfffkl8bqcrx4jhhapnjf7qfs596w2p3";
   };
 
   inherit patches;
@@ -207,10 +208,7 @@ stdenv.mkDerivation ({
 
   dontStrip = !stripped;
 
-  installTargets =
-    if stripped
-    then "install-strip"
-    else "install";
+  installTargets = optional stripped "install-strip";
 
   # https://gcc.gnu.org/install/specific.html#x86-64-x-solaris210
   ${if hostPlatform.system == "x86_64-solaris" then "CC" else null} = "gcc -m64";

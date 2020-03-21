@@ -8,6 +8,7 @@
 # See https://github.com/xianyi/OpenBLAS/blob/develop/TargetList.txt
 , target ? null
 , enableStatic ? false
+, enableShared ? true
 }:
 
 with stdenv.lib;
@@ -60,7 +61,7 @@ let
       TARGET = setTarget "ATHLON";
       DYNAMIC_ARCH = true;
       NO_AVX512 = true;
-      USE_OPENMP = true;
+      USE_OPENMP = !stdenv.hostPlatform.isMusl;
     };
   };
 in
@@ -87,12 +88,12 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "openblas";
-  version = "0.3.7";
+  version = "0.3.8";
   src = fetchFromGitHub {
     owner = "xianyi";
     repo = "OpenBLAS";
     rev = "v${version}";
-    sha256 = "0vs1dlzyla02wajpkfzz8x3lfpgmwiaaizq2nmdjbkzkb7jnxhhz";
+    sha256 = "0s017qqi4n6jzrxl9cyx625wj26smnyn5g8s699s7h8v1srlrw6p";
   };
 
   inherit blas64;
@@ -115,8 +116,17 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     perl
     which
+  ];
+
+  depsBuildBuild = [
     buildPackages.gfortran
     buildPackages.stdenv.cc
+  ];
+
+  # Disable an optimisation which seems to cause issues, pending an
+  # upstream fix: https://github.com/xianyi/OpenBLAS/issues/2496
+  patches = stdenv.lib.optionals stdenv.hostPlatform.isAarch64 [
+    ./0001-Disable-optimised-aarch64-dgemm_beta-pending-fix.patch
   ];
 
   makeFlags = mkMakeFlagsFromConfig (config // {
@@ -126,6 +136,7 @@ stdenv.mkDerivation rec {
     NUM_THREADS = 64;
     INTERFACE64 = blas64;
     NO_STATIC = !enableStatic;
+    NO_SHARED = !enableShared;
     CROSS = stdenv.hostPlatform != stdenv.buildPlatform;
     HOSTCC = "cc";
     # Makefile.system only checks defined status

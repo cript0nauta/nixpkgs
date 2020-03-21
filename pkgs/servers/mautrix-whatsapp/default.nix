@@ -2,18 +2,16 @@
 
 buildGoModule {
   pname = "mautrix-whatsapp-unstable";
-  version = "2019-11-17";
+  version = "2020-02-09";
 
   src = fetchFromGitHub {
     owner = "tulir";
     repo = "mautrix-whatsapp";
-    rev = "0fba1db6aa88a95ff567f44aa9be7ce6ef24787f";
-    sha256 = "07cgpvicr6n897myx86mlnx7bydsxnf51lnjbv9dl5yyii73f957";
+    rev = "260555b69ccd20f247405e4d8cab3d49fabda070";
+    sha256 = "1ykhwrp8bvhzzw4lg4m1w430ybgzd0zqgrs4jrvfd1m0als2iff7";
   };
 
-  patches = [ ./0001-Add-missing-go-dependencies-to-go.sum.patch ];
-
-  modSha256 = "0y0im3dz5z3rcsmnxkk0l6xqwcyxb0bi9h4arw7zblfy16iw6vrr";
+  modSha256 = "0ypj79rjwj5bls6aq2cz0d034dnv1sddl43iz51b4fl2bfv0drm9";
 
   meta = with stdenv.lib; {
     homepage = https://github.com/tulir/mautrix-whatsapp;

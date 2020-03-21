@@ -2,7 +2,7 @@
 , texlive
 , zlib, libiconv, libpng, libX11
 , freetype, gd, libXaw, icu, ghostscript, libXpm, libXmu, libXext
-, perl, perlPackages, pkgconfig, autoreconfHook
+, perl, perlPackages, python2Packages, pkgconfig, autoreconfHook
 , poppler, libpaper, graphite2, zziplib, harfbuzz, potrace, gmp, mpfr
 , cairo, pixman, xorg, clisp, biber, xxHash
 , makeWrapper, shortenPerlShebang
@@ -68,6 +68,9 @@ let
       done
       cp -pv ${pdftoepdf} texk/web2c/pdftexdir/pdftoepdf.cc
       cp -pv ${pdftosrc} texk/web2c/pdftexdir/pdftosrc.cc
+
+      # poppler 0.84 compat fixups, use 0.83 files otherwise
+      patch -p1 -i ${./poppler84.patch}
     '';
 
     # remove when removing synctex-missing-header.patch
@@ -261,9 +264,24 @@ dvisvgm = stdenv.mkDerivation {
 
   inherit (common) src;
 
+  patches = [
+    # Fix for ghostscript>=9.27
+    # Backport of
+    # https://github.com/mgieseki/dvisvgm/commit/bc51951bc90b700c28ea018993bdb058e5271e9b
+    ./dvisvgm-fix.patch
+
+    # Needed for ghostscript>=9.50
+    (fetchpatch {
+      url = "https://github.com/mgieseki/dvisvgm/commit/7b93a9197b69305429183affd24fa40ee04a663a.patch";
+      sha256 = "1gmj76ja9xng39wxckhs9q140abixgb8rkrcfv2cdgq786wm3vag";
+      stripLen = 1;
+      extraPrefix = "texk/dvisvgm/dvisvgm-src/";
+    })
+  ];
+
   nativeBuildInputs = [ pkgconfig ];
   # TODO: dvisvgm still uses vendored dependencies
-  buildInputs = [ core/*kpathsea*/ ghostscript zlib freetype potrace xxHash ];
+  buildInputs = [ core/*kpathsea*/ ghostscript zlib freetype /*potrace xxHash*/ ];
 
   preConfigure = "cd texk/dvisvgm";
 
@@ -286,6 +304,15 @@ dvipng = stdenv.mkDerivation {
 
   nativeBuildInputs = [ perl pkgconfig ];
   buildInputs = [ core/*kpathsea*/ zlib libpng freetype gd ghostscript makeWrapper ];
+
+  patches = [
+    (fetchpatch {
+      url = "http://git.savannah.nongnu.org/cgit/dvipng.git/patch/?id=f3ff241827a587e3d39eda477041fd3280f5b245";
+      sha256 = "1a0ixl9mga24p6xk8dy3v60yifvbzd27vs0hv8996rfkp8jqa7is";
+      stripLen = 1;
+      extraPrefix = "texk/dvipng/dvipng-src/";
+    })
+  ];
 
   preConfigure = ''
     cd texk/dvipng
@@ -331,6 +358,64 @@ latexindent = perlPackages.buildPerlPackage rec {
     cp -r ./scripts/latexindent/LatexIndent "$out"/${perl.libPrefix}/
   '' + stdenv.lib.optionalString stdenv.isDarwin ''
     shortenPerlShebang "$out"/bin/latexindent
+  '';
+};
+
+
+pygmentex = python2Packages.buildPythonApplication rec {
+  pname = "pygmentex";
+  inherit (src) version;
+
+  src = stdenv.lib.head (builtins.filter (p: p.tlType == "run") texlive.pygmentex.pkgs);
+
+  propagatedBuildInputs = with python2Packages; [ pygments chardet ];
+
+  dontBuild = true;
+
+  doCheck = false;
+
+  installPhase = ''
+    runHook preInstall
+
+    install -D ./scripts/pygmentex/pygmentex.py "$out"/bin/pygmentex
+
+    runHook postInstall
+  '';
+
+  meta = with stdenv.lib; {
+    homepage = https://www.ctan.org/pkg/pygmentex;
+    description = "Auxiliary tool for typesetting code listings in LaTeX documents using Pygments";
+    longDescription = ''
+      PygmenTeX is a Python-based LaTeX package that can be used for
+      typesetting code listings in a LaTeX document using Pygments.
+
+      Pygments is a generic syntax highlighter for general use in all kinds of
+      software such as forum systems, wikis or other applications that need to
+      prettify source code.
+    '';
+    license = licenses.lppl13c;
+    maintainers = with maintainers; [ romildo ];
+  };
+};
+
+
+texlinks = stdenv.mkDerivation rec {
+  name = "texlinks.sh";
+
+  src = stdenv.lib.head (builtins.filter (p: p.tlType == "run") texlive.texlive-scripts-extra.pkgs);
+
+  dontBuild = true;
+  doCheck = false;
+
+  installPhase = ''
+    runHook preInstall
+
+    # Patch texlinks.sh back to 2015 version;
+    # otherwise some bin/ links break, e.g. xe(la)tex.
+    patch --verbose -R scripts/texlive-extra/texlinks.sh < '${./texlinks.diff}'
+    install -Dm555 scripts/texlive-extra/texlinks.sh "$out"
+
+    runHook postInstall
   '';
 };
 

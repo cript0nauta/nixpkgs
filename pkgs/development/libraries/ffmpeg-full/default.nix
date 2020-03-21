@@ -239,11 +239,11 @@ assert opensslExtlib -> gnutls == null && openssl != null && nonfreeLicensing;
 
 stdenv.mkDerivation rec {
   pname = "ffmpeg-full";
-  version = "4.2.1";
+  version = "4.2.2";
 
   src = fetchurl {
     url = "https://www.ffmpeg.org/releases/ffmpeg-${version}.tar.xz";
-    sha256 = "1m5nkc61ihgcf0b2wabm0zyqa8sj3c0w8fi6kr879lb0kdzciiyf";
+    sha256 = "176jn1lcdf0gk7sa5l2mv0faqp5dsqdhx1gqcrgymqhfmdal4xfb";
   };
 
   patches = [ ./prefer-libdav1d-over-libaom.patch ];
@@ -353,6 +353,7 @@ stdenv.mkDerivation rec {
     #(enableFeature (cdio-paranoia != null && gplLicensing) "libcdio")
     (enableFeature (if isLinux then libdc1394 != null && libraw1394 != null else false) "libdc1394")
     (enableFeature (libiconv != null) "iconv")
+    (enableFeature (libjack2 != null) "libjack")
     #(enableFeature (if isLinux then libiec61883 != null && libavc1394 != null && libraw1394 != null else false) "libiec61883")
     (enableFeature (if isLinux && !isAarch64 then libmfx != null else false) "libmfx")
     (enableFeature (libmodplug != null) "libmodplug")

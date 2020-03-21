@@ -11,8 +11,8 @@ let
   archive_fmt = if system == "x86_64-darwin" then "zip" else "tar.gz";
 
   sha256 = {
-    x86_64-linux = "0yi1ghliivhb50153dvv9q5gbbgh2dd1m3xrl1i097b3phrzb0j4";
-    x86_64-darwin = "1slf4h8yhhzlr6cm839y3zx7k831zl24xasi88z6xvib32rh9qxs";
+    x86_64-linux = "139sqaixlcqlpcrn2vkcp9fxvcjgnhn2dwxclxq3bnb814pw7rba";
+    x86_64-darwin = "0jkd3p1jqg38z9l22k5w7b45fdnxwrhzlgyhinw7wlqz7zvflkn1";
   }.${system};
 
   sourceRoot = {
@@ -22,8 +22,10 @@ let
 in
   callPackage ./generic.nix rec {
     inherit sourceRoot;
+    # The update script doesn't correctly change the hash for darwin, so please:
+    # nixpkgs-update: no auto update
 
-    version = "1.40.0";
+    version = "1.43.0";
     pname = "vscodium";
 
     executableName = "codium";

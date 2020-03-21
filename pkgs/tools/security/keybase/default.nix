@@ -6,7 +6,7 @@
 
 buildGoPackage rec {
   pname = "keybase";
-  version = "5.0.0";
+  version = "5.3.0";
 
   goPackagePath = "github.com/keybase/client";
   subPackages = [ "go/kbnm" "go/keybase" ];
@@ -17,7 +17,7 @@ buildGoPackage rec {
     owner = "keybase";
     repo = "client";
     rev = "v${version}";
-    sha256 = "0cxxqmgp82qi2b1fljyfa38is94y8ghb2pd31nbyh8y4wnmi0x1s";
+    sha256 = "0xqqzjlvq9sgjx1jzv0w2ls0365xzfh4iapzqkrqka635xfggwcn";
   };
 
   patches = [
@@ -35,7 +35,7 @@ buildGoPackage rec {
     homepage = https://www.keybase.io/;
     description = "The Keybase official command-line utility and service.";
     platforms = platforms.linux ++ platforms.darwin;
-    maintainers = with maintainers; [ carlsverre np rvolosatovs ];
+    maintainers = with maintainers; [ carlsverre np rvolosatovs filalex77 ];
     license = licenses.bsd3;
   };
 }

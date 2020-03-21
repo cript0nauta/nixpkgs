@@ -8,13 +8,13 @@
 
 
 buildPythonPackage rec {
-  version = "6.0.0";
+  version = "8.0.1";
   pname = "azure-mgmt-resource";
 
   src = fetchPypi {
     inherit pname version;
     extension = "zip";
-    sha256 = "08n6r6ja7p20qlhb9pp51nwwxz2mal19an98zry276i8z5x8ckp0";
+    sha256 = "0gngm7w17r5922ji11pnpa6gp5vh5z6la025v9cda6smsnx0fxx7";
   };
 
   postInstall = if isPy3k then "" else ''

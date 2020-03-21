@@ -16,10 +16,10 @@ let
 
   pname = "simplenote";
 
-  version = "1.11.0";
+  version = "1.15.0";
 
   sha256 = {
-    x86_64-linux = "1ljam1yfiy1lh6lrknrq7cdqpj1q7f655mxjiiwv3izp98qr1f8s";
+    x86_64-linux = "08h3g2rw75k63ssd62c6jrb2dy9sz85y5jpfj5np64dvw70a1811";
   }.${system} or throwSystem;
 
   meta = with stdenv.lib; {
@@ -87,6 +87,7 @@ let
 
     postFixup = ''
       makeWrapper $out/opt/Simplenote/simplenote $out/bin/simplenote \
+        --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [ stdenv.cc.cc ] }" \
         "''${gappsWrapperArgs[@]}"
     '';
   };

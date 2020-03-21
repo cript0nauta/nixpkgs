@@ -1,15 +1,26 @@
-{ stdenv, buildDunePackage, fetchFromGitHub, alcotest
-, eigen, stdio, stdlib-shims, openblasCompat, owl-base
+{ stdenv
+, buildDune2Package
+, dune-configurator
+, fetchFromGitHub
+, alcotest
+, eigen
+, stdio
+, stdlib-shims
+, openblasCompat
+, owl-base
+, npy
 }:
 
-buildDunePackage rec {
+buildDune2Package rec {
   pname = "owl";
 
   inherit (owl-base) version src meta;
 
-  buildInputs = [ eigen ];
   checkInputs = [ alcotest ];
-  propagatedBuildInputs = [ stdio stdlib-shims openblasCompat owl-base ];
+  buildInputs = [ dune-configurator ];
+  propagatedBuildInputs = [
+    eigen stdio stdlib-shims openblasCompat owl-base npy
+  ];
 
-  # tests not enabled for now due to owlbarn/owl/issues/460
+  doCheck = !stdenv.isDarwin;  # https://github.com/owlbarn/owl/issues/462
 }

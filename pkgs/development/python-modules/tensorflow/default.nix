@@ -1,13 +1,13 @@
-{ stdenv, pkgs, buildBazelPackage, lib, fetchFromGitHub, fetchpatch, symlinkJoin
+{ stdenv, pkgs, bazel_0, buildBazelPackage, lib, fetchFromGitHub, fetchpatch, symlinkJoin
 , addOpenGLRunpath
 # Python deps
-, buildPythonPackage, isPy3k, pythonOlder, pythonAtLeast, python
+, buildPythonPackage, isPy3k, isPy27, pythonOlder, pythonAtLeast, python
 # Python libraries
 , numpy, tensorflow-tensorboard, backports_weakref, mock, enum34, absl-py
 , future, setuptools, wheel, keras-preprocessing, keras-applications, google-pasta
 , functools32
 , opt-einsum
-, termcolor, grpcio, six, wrapt, protobuf, tensorflow-estimator
+, termcolor, grpcio, six, wrapt, protobuf, tensorflow-estimator_1_15_1
 # Common deps
 , git, swig, which, binutils, glibcLocales, cython
 # Common libraries
@@ -25,6 +25,8 @@
 , sse42Support ? builtins.elem (stdenv.hostPlatform.platform.gcc.arch or "default") ["westmere" "sandybridge" "ivybridge" "haswell" "broadwell" "skylake" "skylake-avx512"]
 , avx2Support  ? builtins.elem (stdenv.hostPlatform.platform.gcc.arch or "default") [                                     "haswell" "broadwell" "skylake" "skylake-avx512"]
 , fmaSupport   ? builtins.elem (stdenv.hostPlatform.platform.gcc.arch or "default") [                                     "haswell" "broadwell" "skylake" "skylake-avx512"]
+# Darwin deps
+, Foundation, Security
 }:
 
 assert cudaSupport -> nvidia_x11 != null
@@ -67,7 +69,7 @@ let
 
   tfFeature = x: if x then "1" else "0";
 
-  version = "1.15.0";
+  version = "1.15.2";
   variant = if cudaSupport then "-gpu" else "";
   pname = "tensorflow${variant}";
 
@@ -92,12 +94,13 @@ let
 
   bazel-build = buildBazelPackage {
     name = "${pname}-${version}";
+    bazel = bazel_0;
 
     src = fetchFromGitHub {
       owner = "tensorflow";
       repo = "tensorflow";
       rev = "v${version}";
-      sha256 = "1j8vysfblkyydrr67qr3i7kvaq5ygnjlx8hw9a9pc95ac462jq7i";
+      sha256 = "1q0848drjvnaaa38dgns8knmpmkj5plzsc98j20m5ybv68s55w78";
     };
 
     patches = [
@@ -112,8 +115,12 @@ let
         url = "https://github.com/tensorflow/tensorflow/pull/29673/commits/498e35a3bfe38dd75cf1416a1a23c07c3b59e6af.patch";
         sha256 = "1m2qmwv1ysqa61z6255xggwbq6mnxbig749bdvrhnch4zydxb4di";
       })
+      (fetchpatch {
+        name = "backport-pr-18950.patch";
+        url = "https://github.com/tensorflow/tensorflow/commit/73640aaec2ab0234d9fff138e3c9833695570c0a.patch";
+        sha256 = "1n9ypbrx36fc1kc9cz5b3p9qhg15xxhq4nz6ap3hwqba535nakfz";
+      })
 
-      ./tf-1.15-bazel-1.0.patch
 
       (fetchpatch {
         # be compatible with gast >0.2 instead of only gast 0.2.2
@@ -122,6 +129,10 @@ let
         sha256 = "077cpj0kzyqxzdya1dwh8df17zfzhqn7c685hx6iskvw2979zg2n";
       })
       ./lift-gast-restriction.patch
+
+      # cuda 10.2 does not have "-bin2c-path" option anymore
+      # https://github.com/tensorflow/tensorflow/issues/34429
+      ./cuda-10.2-no-bin2c-path.patch
     ];
 
     # On update, it can be useful to steal the changes from gentoo
@@ -157,6 +168,9 @@ let
       cudatoolkit
       cudnn
       nvidia_x11
+    ] ++ lib.optionals stdenv.isDarwin [
+      Foundation
+      Security
     ];
 
     # arbitrarily set to the current latest bazel version, overly careful
@@ -261,14 +275,13 @@ let
     '';
 
     # FIXME: Tensorflow uses dlopen() for CUDA libraries.
-    NIX_LDFLAGS = lib.optionals cudaSupport [ "-lcudart" "-lcublas" "-lcufft" "-lcurand" "-lcusolver" "-lcusparse" "-lcudnn" ];
+    NIX_LDFLAGS = lib.optionalString cudaSupport "-lcudart -lcublas -lcufft -lcurand -lcusolver -lcusparse -lcudnn";
 
     hardeningDisable = [ "format" ];
 
     bazelFlags = [
       # temporary fixes to make the build work with bazel 0.27
       "--incompatible_no_support_tools_in_action_inputs=false"
-      "--incompatible_use_native_patch=false"
     ];
     bazelBuildFlags = [
       "--config=opt" # optimize using the flags set in the configure phase
@@ -282,9 +295,9 @@ let
 
       # cudaSupport causes fetch of ncclArchive, resulting in different hashes
       sha256 = if cudaSupport then
-        "1rbg8w8pjf15hpvzrclsi19lhsrwdns6f8psb1wz35ay0ggdw8c0"
+        "1qygfcvvn9vysap9nk6xccxi9mgmzyxiywz6k456f811l1v70p2c"
       else
-        "0d8wq89iz9vrzvr971mgdclxxjcjr32r7aj817h019x3pc53qnwx";
+        "0kfjanw0mfbh30vi1ms2xlg8yp429cbyfriik6yxd5cla2pncg2j";
     };
 
     buildAttrs = {
@@ -326,7 +339,7 @@ let
       homepage = http://tensorflow.org;
       license = licenses.asl20;
       maintainers = with maintainers; [ jyp abbradar ];
-      platforms = platforms.linux;
+      platforms = with platforms; linux ++ darwin;
       # The py2 build fails due to some issue importing protobuf. Possibly related to the fix in
       # https://github.com/akesandgren/easybuild-easyblocks/commit/1f2e517ddfd1b00a342c6abb55aef3fd93671a2b
       broken = !(xlaSupport -> cudaSupport) || !isPy3k;
@@ -335,6 +348,7 @@ let
 
 in buildPythonPackage {
   inherit version pname;
+  disabled = isPy27 || (pythonAtLeast "3.8");
 
   src = bazel-build.python;
 
@@ -359,7 +373,7 @@ in buildPythonPackage {
     numpy
     six
     protobuf
-    tensorflow-estimator
+    tensorflow-estimator_1_15_1
     termcolor
     wrapt
     grpcio
@@ -405,6 +419,9 @@ in buildPythonPackage {
     x = np.random.uniform(size=(1,1))
     y = np.random.uniform(size=(1,))
     model.fit(x, y, epochs=1)
+
+    # regression test for #77626
+    from tensorflow.contrib import tensor_forest
     EOF
   '';
 

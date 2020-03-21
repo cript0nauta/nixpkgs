@@ -1,14 +1,14 @@
-{ stdenv, buildDunePackage, fetchFromGitHub, integers, stdlib-shims }:
+{ stdenv, buildDune2Package, fetchFromGitHub, stdlib-shims }:
 
-buildDunePackage rec {
+buildDune2Package rec {
   pname = "owl-base";
-  version = "0.7.1";
+  version = "0.8.0";
 
   src = fetchFromGitHub {
     owner  = "owlbarn";
     repo   = "owl";
     rev    = version;
-    sha256 = "1v4jfn3w18zq188f9gskx9ffja3xx59j2mgrw6azp8lsbqixg5xk";
+    sha256 = "1j3xmr4izfznmv8lbn8vkx9c77py2xr6fqyn6ypjlf5k9b8g4mmw";
   };
 
   propagatedBuildInputs = [ stdlib-shims ];

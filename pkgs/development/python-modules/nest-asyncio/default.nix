@@ -1,23 +1,28 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
 , pythonAtLeast
 }:
 
 buildPythonPackage rec {
-  version = "1.2.0";
+  version = "1.3.0";
   pname = "nest_asyncio";
   disabled = !(pythonAtLeast "3.5");
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "f5b22dd23ee6195cea509c344d9ec34274f45bff078d8f18e9dc322dc74c6008";
+    sha256 = "1cbd885n3sf4qg1dv3mk1ggr5ssk48yzrzssznr92dh53g04ly7g";
   };
 
-  meta = with stdenv.lib; {
-    homepage = https://github.com/erdewit/nest_asyncio;
+  # tests not packaged with source dist as of 1.3.0/1.3.0, and
+  # can't check tests out of GitHub easily without specific commit IDs (no tagged releases)
+  doCheck = false;
+  pythonImportsCheck = [ "nest_asyncio" ];
+
+  meta = with lib; {
     description = "Patch asyncio to allow nested event loops";
+    homepage = "https://github.com/erdewit/nest_asyncio";
     license = licenses.bsdOriginal;
-    maintainers = [ maintainers.costrouc ];
+    maintainers = with maintainers; [ costrouc ];
   };
 }

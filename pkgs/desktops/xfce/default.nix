@@ -56,6 +56,8 @@ lib.makeScope pkgs.newScope (self: with self; {
 
   #### APPLICATIONS
 
+  catfish = callPackage ./applications/catfish { };
+
   gigolo = callPackage ./applications/gigolo { };
 
   mousepad = callPackage ./applications/mousepad { };
@@ -76,7 +78,7 @@ lib.makeScope pkgs.newScope (self: with self; {
     inherit (pkgs.gnome3) libsoup;
   };
 
-  xfdashbooard = callPackage ./applications/xfdashboard {};
+  xfdashboard = callPackage ./applications/xfdashboard {};
 
   # TODO: this repo is inactive for many years. Remove?
   xfce4-volumed = callPackage ./applications/xfce4-volumed { };
@@ -137,7 +139,7 @@ lib.makeScope pkgs.newScope (self: with self; {
 
   xfce4-timer-plugin = callPackage ./panel-plugins/xfce4-timer-plugin.nix { };
 
-  xfce4-verve-plugin = callPackage ./panel-plugins/xfce4-verve-plugin.nix { };
+  xfce4-verve-plugin = callPackage ./panel-plugins/xfce4-verve-plugin { };
 
   xfce4-xkb-plugin = callPackage ./panel-plugins/xfce4-xkb-plugin { };
 

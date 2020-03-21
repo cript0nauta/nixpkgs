@@ -29,6 +29,9 @@ let
       JDK_HOME = ${openjdk11-bootstrap.home}
     '' + args.gradleProperties or "");
 
+    #avoids errors about deprecation of GTypeDebugFlags, GTimeVal, etc.
+    NIX_CFLAGS_COMPILE = [ "-DGLIB_DISABLE_DEPRECATION_WARNINGS" ];
+
     buildPhase = ''
       runHook preBuild
 
@@ -84,7 +87,7 @@ in makePackage {
   '';
 
   # glib-2.62 deprecations
-  NIX_CFLAGS_COMPILE = [ "-DGLIB_DISABLE_DEPRECATION_WARNINGS" ];
+  NIX_CFLAGS_COMPILE = "-DGLIB_DISABLE_DEPRECATION_WARNINGS";
 
   stripDebugList = [ "." ];
 

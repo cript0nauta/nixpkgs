@@ -1,39 +1,28 @@
 { stdenv, lib, darwin
 , rustPlatform, fetchFromGitHub
-, openssl, pkgconfig }:
+, openssl, pkg-config, libiconv }:
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-edit";
-  version = "0.4.1";
+  version = "0.5.0";
 
   src = fetchFromGitHub {
     owner = "killercup";
     repo = pname;
     rev = "v${version}";
-    sha256 = "087l8qdwfnnklw6zyjwflxh7hyhh4r7wala36cc4lrj7lag2xm9n";
+    sha256 = "16gpljbzk6cibry9ssnl22xbcsx2cr57mrs3x3n6cfmldbp6bhbr";
   };
 
-  cargoSha256 = "1ih1p9jdwr1ymq2p6ipz6rybi17f3qn65kn4bqkgzx36afvpnd5l";
+  cargoSha256 = "1zwkar914zyghky09lgk0s374m5d6yccn0m15bqlgxxyymg4b59y";
 
-  nativeBuildInputs = lib.optional (!stdenv.isDarwin) pkgconfig;
-  buildInputs = lib.optional (!stdenv.isDarwin) openssl;
-  propagatedBuildInputs = lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.Security;
-
-  patches = [
-    # https://github.com/killercup/cargo-edit/pull/362
-    ./no_upgrade_index_in_tests.patch
-  ];
-
-  # The default `/build` will fail the test (seems) due to permission problem.
-  preCheck = ''
-    export TMPDIR="/tmp"
-  '';
+  nativeBuildInputs = [ pkg-config ];
+  buildInputs = [ openssl ] ++ lib.optionals stdenv.isDarwin [ libiconv darwin.apple_sdk.frameworks.Security ];
 
   meta = with lib; {
     description = "A utility for managing cargo dependencies from the command line";
     homepage = https://github.com/killercup/cargo-edit;
     license = with licenses; [ mit ];
-    maintainers = with maintainers; [ gerschtli jb55 ];
+    maintainers = with maintainers; [ gerschtli jb55 filalex77 ];
     platforms = platforms.all;
   };
 }

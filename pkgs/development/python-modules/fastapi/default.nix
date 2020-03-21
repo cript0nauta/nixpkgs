@@ -1,22 +1,30 @@
 { lib
 , buildPythonPackage
-, fetchPypi
+, fetchFromGitHub
+, fetchurl
 , uvicorn
 , starlette
 , pydantic
-, python
 , isPy3k
-, which
+, pytest
+, pytestcov
+, pyjwt
+, passlib
+, aiosqlite
+, peewee
 }:
 
 buildPythonPackage rec {
   pname = "fastapi";
-  version = "0.42.0";
+  version = "0.49.0";
+  format = "flit";
   disabled = !isPy3k;
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "48cb522c1c993e238bfe272fbb18049cbd4bf5b9d6c0d4a4fa113cc790e8196c";
+  src = fetchFromGitHub {
+    owner = "tiangolo";
+    repo = "fastapi";
+    rev = version;
+    sha256 = "1dw5f2xvn0fqqsy29ypba8v3444cy7dvc7gkpmnhshky0rmfni3n";
   };
 
   propagatedBuildInputs = [
@@ -25,10 +33,17 @@ buildPythonPackage rec {
     pydantic
   ];
 
-  patches = [ ./setup.py.patch ];
+  checkInputs = [
+    pytest
+    pytestcov
+    pyjwt
+    passlib
+    aiosqlite
+    peewee
+  ];
 
   checkPhase = ''
-    ${python.interpreter} -c "from fastapi import FastAPI; app = FastAPI()"
+    pytest --ignore=tests/test_default_response_class.py
   '';
 
   meta = with lib; {

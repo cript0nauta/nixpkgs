@@ -18,7 +18,7 @@ lib.makeScope pkgs.newScope (self: with self; {
     in
       lib.filter (x: !(builtins.elem (lib.getName x) namesToRemove)) packages;
 
-  maintainers = with pkgs.lib.maintainers; [ lethalman jtojnar hedning worldofpeace ];
+  maintainers = lib.teams.gnome.members;
 
   libsoup = pkgs.libsoup.override { gnomeSupport = true; };
   libchamplain = pkgs.libchamplain.override { libsoup = libsoup; };
@@ -135,10 +135,6 @@ lib.makeScope pkgs.newScope (self: with self; {
   };
 
   networkmanager-iodine = pkgs.networkmanager-iodine.override {
-    withGnome = true;
-  };
-
-  networkmanagerapplet = pkgs.networkmanagerapplet.override {
     withGnome = true;
   };
 
@@ -360,4 +356,6 @@ lib.makeScope pkgs.newScope (self: with self; {
   inherit (pkgs) yelp-tools; # added 2019-11-20
 
   inherit (pkgs) dconf; # added 2019-11-30
+
+  inherit (pkgs) networkmanagerapplet; # added 2019-12-12
 })
