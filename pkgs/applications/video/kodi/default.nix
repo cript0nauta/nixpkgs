@@ -19,6 +19,7 @@
 , libcrossguid, libmicrohttpd
 , bluez, doxygen, giflib, glib, harfbuzz, lcms2, libidn, libpthreadstubs, libtasn1, libXdmcp
 , libplist, p11-kit, zlib, flatbuffers, fmt, fstrcmp, rapidjson
+, lirc
 , dbusSupport ? true, dbus ? null
 , joystickSupport ? true, cwiid ? null
 , nfsSupport ? true, libnfs ? null
@@ -30,6 +31,7 @@
 , vdpauSupport ? true, libvdpau ? null
 , useWayland ? false, wayland ? null, wayland-protocols ? null
 , waylandpp ?  null, libxkbcommon ? null
+, useGbm ? false, mesa ? null, libinput ? null
 }:
 
 assert dbusSupport  -> dbus != null;
@@ -168,6 +170,7 @@ in stdenv.mkDerivation {
       libcrossguid cwiid libplist
       bluez giflib glib harfbuzz lcms2 libpthreadstubs libXdmcp
       ffmpeg flatbuffers fmt fstrcmp rapidjson
+      lirc
       # libdvdcss libdvdnav libdvdread
     ]
     ++ lib.optional  dbusSupport     dbus
@@ -183,6 +186,11 @@ in stdenv.mkDerivation {
       wayland waylandpp
       # Not sure why ".dev" is needed here, but CMake doesn't find libxkbcommon otherwise
       libxkbcommon.dev
+    ]
+    ++ lib.optional useGbm [
+      libxkbcommon.dev
+      mesa.dev
+      libinput.dev
     ];
 
     nativeBuildInputs = [
@@ -202,10 +210,12 @@ in stdenv.mkDerivation {
       "-DENABLE_EVENTCLIENTS=ON"
       "-DENABLE_INTERNAL_CROSSGUID=OFF"
       "-DENABLE_OPTICAL=ON"
-      "-DLIRC_DEVICE=/run/lirc/lircd"
     ] ++ lib.optional useWayland [
       "-DCORE_PLATFORM_NAME=wayland"
       "-DWAYLAND_RENDER_SYSTEM=gl"
+    ] ++ lib.optional useGbm [
+      "-DCORE_PLATFORM_NAME=gbm"
+      "-DGBM_RENDER_SYSTEM=gles"
     ];
 
     enableParallelBuilding = true;
