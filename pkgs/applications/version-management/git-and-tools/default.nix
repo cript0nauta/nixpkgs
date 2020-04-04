@@ -40,7 +40,7 @@ let
     inherit (darwin.apple_sdk.frameworks) Security;
   };
 
-  git-annex = pkgs.haskellPackages.git-annex;
+  git-annex = pkgs.haskell.packages.ghc865.git-annex;
 
   git-annex-metadata-gui = libsForQt5.callPackage ./git-annex-metadata-gui {
     inherit (python3Packages) buildPythonApplication pyqt5 git-annex-adapter;

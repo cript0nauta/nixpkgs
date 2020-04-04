@@ -5713,9 +5713,9 @@ in
 
   pal = callPackage ../tools/misc/pal { };
 
-  pandoc = haskell.lib.overrideCabal (haskell.lib.justStaticExecutables haskellPackages.pandoc) (drv: {
+  pandoc = haskell.lib.overrideCabal (haskell.lib.justStaticExecutables haskell.packages.ghc865.pandoc) (drv: {
     configureFlags = drv.configureFlags or [] ++ ["-fembed_data_files"];
-    buildDepends = drv.buildDepends or [] ++ [haskellPackages.file-embed];
+    buildDepends = drv.buildDepends or [] ++ [haskell.packages.ghc865.file-embed];
   });
 
   pamtester = callPackage ../tools/security/pamtester { };
