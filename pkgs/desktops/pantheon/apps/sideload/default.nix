@@ -21,18 +21,18 @@
 
 stdenv.mkDerivation rec {
   pname = "sideload";
-  version = "1.0.0";
+  version = "1.1.0";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "1qi4wm773bf1szi5a77g9lxjn305v1m85j4nb6il9q4qlh9b1cs5";
+    sha256 = "1nnaq4vc0aag6pckxhrma5qv8al7i00rrlg95ac4iqqmivja7i92";
   };
 
   passthru = {
     updateScript = pantheon.updateScript {
-      repoName = pname;
+      attrPath = "pantheon.${pname}";
     };
   };
 

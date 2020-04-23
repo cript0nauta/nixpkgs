@@ -10,20 +10,16 @@ let
 
   isMariaDB = lib.getName mysql == lib.getName pkgs.mariadb;
 
-  isMysqlAtLeast57 =
-    (lib.getName mysql == lib.getName pkgs.mysql57)
-     && (builtins.compareVersions mysql.version "5.7" >= 0);
-
   mysqldOptions =
     "--user=${cfg.user} --datadir=${cfg.dataDir} --basedir=${mysql}";
-  # For MySQL 5.7+, --insecure creates the root user without password
-  # (earlier versions and MariaDB do this by default).
-  installOptions =
-    "${mysqldOptions} ${lib.optionalString isMysqlAtLeast57 "--insecure"}";
 
 in
 
 {
+  imports = [
+    (mkRemovedOptionModule [ "services" "mysql" "pidDir" ] "Don't wait for pidfiles, describe dependencies through systemd")
+    (mkRemovedOptionModule [ "services" "mysql" "rootPassword" ] "Use socket authentication or set the password outside of the nix store.")
+  ];
 
   ###### interface
 
@@ -303,9 +299,14 @@ in
           pkgs.nettools
         ];
 
-        preStart = ''
+        preStart = if isMariaDB then ''
           if ! test -e ${cfg.dataDir}/mysql; then
-            ${mysql}/bin/mysql_install_db --defaults-file=/etc/my.cnf ${installOptions}
+            ${mysql}/bin/mysql_install_db --defaults-file=/etc/my.cnf ${mysqldOptions}
+            touch /tmp/mysql_init
+          fi
+        '' else ''
+          if ! test -e ${cfg.dataDir}/mysql; then
+            ${mysql}/bin/mysqld --defaults-file=/etc/my.cnf ${mysqldOptions} --initialize-insecure
             touch /tmp/mysql_init
           fi
         '';
@@ -316,6 +317,8 @@ in
           Type = if hasNotify then "notify" else "simple";
           RuntimeDirectory = "mysqld";
           RuntimeDirectoryMode = "0755";
+          Restart = "on-abort";
+          RestartSec = "5s";
           # The last two environment variables are used for starting Galera clusters
           ExecStart = "${mysql}/bin/mysqld --defaults-file=/etc/my.cnf ${mysqldOptions} $_WSREP_NEW_CLUSTER $_WSREP_START_POSITION";
           ExecStartPost =

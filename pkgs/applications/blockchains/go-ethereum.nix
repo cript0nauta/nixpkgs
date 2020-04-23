@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "go-ethereum";
-  version = "1.9.8";
+  version = "1.9.10";
 
   src = fetchFromGitHub {
     owner = "ethereum";
     repo = pname;
     rev = "v${version}";
-    sha256 = "0v4hchy6h3282347ps11iv7klcr60bmghha78rnp0iqpx2k8pqb4";
+    sha256 = "0pm8gfr4g7rbax6vzxv6lklpx83mxghah7fyvpk3jqvm1mq299ln";
   };
 
-  modSha256 = "1l10p6a4qq77pfx7jmipkcg2qg6w3hg83q5a37yid3apily2scfa";
+  modSha256 = "0zar9nvx2nk6kyijp8df3y2rzxvg0mccj6b3skhzf8y9c27hvrsg";
 
   subPackages = [
     "cmd/abigen"

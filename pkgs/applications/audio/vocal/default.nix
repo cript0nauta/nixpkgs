@@ -7,6 +7,7 @@
 , pantheon
 , gtk3
 , glib
+, glib-networking
 , libxml2
 , webkitgtk
 , clutter-gtk
@@ -56,7 +57,15 @@ stdenv.mkDerivation rec {
     pantheon.granite
     sqlite
     webkitgtk
+    glib-networking
   ];
+
+  passthru = {
+    updateScript = pantheon.updateScript {
+      attrPath = pname;
+    };
+  };
+
 
   meta = with stdenv.lib; {
     description = "The podcast client for the modern free desktop";

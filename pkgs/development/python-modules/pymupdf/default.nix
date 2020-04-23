@@ -1,11 +1,11 @@
 { stdenv, buildPythonPackage, fetchPypi, mupdf, swig }:
 buildPythonPackage rec {
   pname = "PyMuPDF";
-  version = "1.16.8";
+  version = "1.16.10";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "3099b48a796885c0760d8ac5439131dee1bc6adadf7ae008417e0ca8d8fcdf15";
+    sha256 = "d7893954f97fa6087629f3875f3be066dab51302e7c73f4c98c0516a8e2893fb";
   };
 
   patchPhase = ''

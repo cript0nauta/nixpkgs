@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
   version = "1.22.2";
 
   src = fetchurl {
-    url = "http://pub.mate-desktop.org/releases/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
+    url = "https://pub.mate-desktop.org/releases/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
     sha256 = "1ybdjibi6wgqn3587a66ckxp2qkvl4mcvv2smhflyxksl5djrjgh";
   };
 
@@ -38,6 +38,8 @@ stdenv.mkDerivation rec {
   ];
 
   patches = [
+    # see https://github.com/mate-desktop/mate-control-center/pull/528
+    ./0001-Search-system-themes-in-system-data-dirs.patch
     # look up keyboard shortcuts in system data dirs
     ./mate-control-center.keybindings-dir.patch
   ];

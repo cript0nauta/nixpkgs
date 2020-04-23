@@ -95,8 +95,8 @@ let
         ++ optional postgresqlSupport postgresql
         ++ optional pdo_odbcSupport unixODBC
         ++ optional pdo_pgsqlSupport postgresql
-        ++ optional pdo_mysqlSupport mysqlBuildInputs
-        ++ optional mysqliSupport mysqlBuildInputs
+        ++ optionals pdo_mysqlSupport mysqlBuildInputs
+        ++ optionals mysqliSupport mysqlBuildInputs
         ++ optional gmpSupport gmp
         ++ optional gettextSupport gettext
         ++ optional intlSupport icu
@@ -109,14 +109,14 @@ let
         ++ optional libzipSupport libzip
         ++ optional valgrindSupport valgrind;
 
-      CXXFLAGS = optional stdenv.cc.isClang "-std=c++11";
+      CXXFLAGS = optionalString stdenv.cc.isClang "-std=c++11";
 
       configureFlags = [
         "--with-config-file-scan-dir=/etc/php.d"
       ]
-      ++ optional (versionOlder version "7.3") "--with-pcre-regex=${pcre.dev} PCRE_LIBDIR=${pcre}"
-      ++ optional (versions.majorMinor version == "7.3") "--with-pcre-regex=${pcre2.dev} PCRE_LIBDIR=${pcre2}"
-      ++ optional (versionAtLeast version "7.4") "--with-external-pcre=${pcre2.dev} PCRE_LIBDIR=${pcre2}"
+      ++ optionals (versionOlder version "7.3") [ "--with-pcre-regex=${pcre.dev}" "PCRE_LIBDIR=${pcre}" ]
+      ++ optionals (versions.majorMinor version == "7.3") [ "--with-pcre-regex=${pcre2.dev}" "PCRE_LIBDIR=${pcre2}" ]
+      ++ optionals (versionAtLeast version "7.4") [ "--with-external-pcre=${pcre2.dev}" "PCRE_LIBDIR=${pcre2}" ]
       ++ optional stdenv.isDarwin "--with-iconv=${libiconv}"
       ++ optional withSystemd "--with-fpm-systemd"
       ++ optionals imapSupport [
@@ -129,7 +129,7 @@ let
         "LDAP_INCDIR=${openldap.dev}/include"
         "LDAP_LIBDIR=${openldap.out}/lib"
       ]
-      ++ optional (ldapSupport && stdenv.isLinux)   "--with-ldap-sasl=${cyrus_sasl.dev}"
+      ++ optional (ldapSupport && stdenv.isLinux) "--with-ldap-sasl=${cyrus_sasl.dev}"
       ++ optional apxs2Support "--with-apxs2=${apacheHttpd.dev}/bin/apxs"
       ++ optional embedSupport "--enable-embed"
       ++ optional mhashSupport "--with-mhash"
@@ -182,6 +182,7 @@ let
       ++ optional mcryptSupport "--with-mcrypt=${libmcrypt'}"
       ++ optional bz2Support "--with-bz2=${bzip2.dev}"
       ++ optional (zipSupport && (versionOlder version "7.4")) "--enable-zip"
+      ++ optional (zipSupport && (versionAtLeast version "7.4")) "--with-zip"
       ++ optional ftpSupport "--enable-ftp"
       ++ optional fpmSupport "--enable-fpm"
       ++ optional ztsSupport "--enable-maintainer-zts"
@@ -262,23 +263,23 @@ let
 
 in {
   php72 = generic {
-    version = "7.2.24";
-    sha256 = "00znhjcn6k4mbxz6jqlqf6bzr4cqdf8pnbmxkg6bns1hnr6r6yd0";
+    version = "7.2.29";
+    sha256 = "08xry2fgqgg8s0ym1hh11wkbr36av3zq1bn4krbciw1b7x8gb8ga";
 
     # https://bugs.php.net/bug.php?id=76826
     extraPatches = optional stdenv.isDarwin ./php72-darwin-isfinite.patch;
   };
 
   php73 = generic {
-    version = "7.3.11";
-    sha256 = "1rxm256vhnvyabfwmyv51sqrkjlid1g8lczcy4skc2f72d5zzlcj";
+    version = "7.3.16";
+    sha256 = "0bh499v9dfgh9k51w4rird1slb9rh9whp5h37fb84c98d992s1xq";
 
     # https://bugs.php.net/bug.php?id=76826
     extraPatches = optional stdenv.isDarwin ./php73-darwin-isfinite.patch;
   };
 
   php74 = generic {
-    version = "7.4.0";
-    sha256 = "1h01bahvcm9kgm5jqhm2j9k9d4q4rpfkkpqk00c47rirdblnn85z";
+    version = "7.4.4";
+    sha256 = "17w2m4phhpj76x5fx67vgjrlkcczqvky3f5in1kjg2pch90qz3ih";
   };
 }

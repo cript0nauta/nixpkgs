@@ -31,6 +31,7 @@ in
     (mkRenamedOptionModule
       [ "services" "xserver" "desktopManager" "xfce" "extraSessionCommands" ]
       [ "services" "xserver" "displayManager" "sessionCommands" ])
+    (mkRemovedOptionModule [ "services" "xserver" "desktopManager" "xfce" "screenLock" ] "")
   ];
 
   options = {
@@ -128,6 +129,7 @@ in
 
     services.xserver.desktopManager.session = [{
       name = "xfce";
+      desktopNames = [ "XFCE" ];
       bgSupport = true;
       start = ''
         ${pkgs.runtimeShell} ${pkgs.xfce.xfce4-session.xinitrc} &

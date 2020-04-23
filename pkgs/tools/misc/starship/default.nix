@@ -1,24 +1,25 @@
-{ stdenv, fetchFromGitHub, rustPlatform, libiconv, darwin }:
+{ stdenv, fetchFromGitHub, rustPlatform
+, libiconv, Security }:
 
 rustPlatform.buildRustPackage rec {
   pname = "starship";
-  version = "0.27.0";
+  version = "0.35.1";
 
   src = fetchFromGitHub {
     owner = "starship";
     repo = pname;
     rev = "v${version}";
-    sha256 = "1bps40rzljxihl87hbbdlas5v9lphhsjzgaqz2y0haqwjj1vjpm9";
+    sha256 = "17338l3nj6rysl9qvlbi1amqk6n5p15x8fvd11md7hwiavy4c63c";
   };
 
-  buildInputs = stdenv.lib.optionals stdenv.isDarwin [ libiconv darwin.apple_sdk.frameworks.Security ];
+  buildInputs = stdenv.lib.optionals stdenv.isDarwin [ libiconv Security ];
 
   postPatch = ''
     substituteInPlace src/utils.rs \
       --replace "/bin/echo" "echo"
   '';
 
-  cargoSha256 = "110ajwgdshakcqxfnqi30yy0miikp2qx86flwfkd78jawfll2krp";
+  cargoSha256 = "0q6g7i930n23aabkwfn30lpbm5brjls552ql5khc6w02sirshsng";
   checkPhase = "cargo test -- --skip directory::home_directory --skip directory::directory_in_root";
 
   meta = with stdenv.lib; {
