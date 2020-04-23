@@ -10,11 +10,11 @@
 
 buildPythonPackage rec {
   pname = "shodan";
-  version = "1.19.1";
+  version = "1.22.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "76b8a3ba577a62799e3ea86410aea54e1f403ef6efbf681a3f38baa2bf4e1c58";
+    sha256 = "0pgkd0pngmygafld283zfx7whlv6yp3ldgd4sjv8bxjcsb19iw59";
   };
 
   propagatedBuildInputs = [
@@ -30,7 +30,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Python library and command-line utility for Shodan";
-    homepage = https://github.com/achillean/shodan-python;
+    homepage = "https://github.com/achillean/shodan-python";
     license = licenses.mit;
     maintainers = with maintainers; [ lihop ];
   };

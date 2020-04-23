@@ -52,14 +52,14 @@ stdenv.mkDerivation rec {
   ];
 
   nativeBuildInputs = [ ocaml findlib ocamlbuild cc-wrapper ];
-  buildInputs = [ ocamlbuild findlib topkg cpuid ocb-stubblr ppx_deriving ];
-  propagatedBuildInputs = [ cstruct ppx_sexp_conv sexplib zarith ] ++ optional withLwt cstruct-lwt;
+  buildInputs = [ ocamlbuild findlib topkg cpuid ocb-stubblr ];
+  propagatedBuildInputs = [ cstruct ppx_deriving ppx_sexp_conv sexplib zarith ] ++ optional withLwt cstruct-lwt;
 
-  buildPhase = "${topkg.buildPhase} --with-lwt ${boolToString withLwt}";
+  buildPhase = "${topkg.buildPhase} --accelerate false --with-lwt ${boolToString withLwt}";
   inherit (topkg) installPhase;
 
   meta = {
-    homepage = https://github.com/mirleft/ocaml-nocrypto;
+    homepage = "https://github.com/mirleft/ocaml-nocrypto";
     description = "Simplest possible crypto to support TLS";
     license = stdenv.lib.licenses.bsd2;
     maintainers = with stdenv.lib.maintainers; [ vbgl ];

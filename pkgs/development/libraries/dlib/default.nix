@@ -7,13 +7,13 @@
 
 stdenv.mkDerivation rec {
   pname = "dlib";
-  version = "19.18";
+  version = "19.19";
 
   src = fetchFromGitHub {
     owner = "davisking";
     repo = "dlib";
     rev ="v${version}";
-    sha256 = "1kbrcf35pn2ymyr8q48ls98n2zb7rrz5207kwpisfh6k22g802ic";
+    sha256 = "0574p46zf85nx33cam4yqcg20g94kkmrvi5689r1xshprr0szghp";
   };
 
   postPatch = ''
@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "A general purpose cross-platform C++ machine learning library";
-    homepage = http://www.dlib.net;
+    homepage = "http://www.dlib.net";
     license = licenses.boost;
     maintainers = with maintainers; [ christopherpoole ma27 ];
     platforms = platforms.linux;
