@@ -2,11 +2,11 @@
 
 buildPythonPackage rec {
   pname = "PyChromecast";
-  version = "4.2.0";
+  version = "7.1.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "05h7ncymyh1715v2jkj312qza5qlqrz6yfpgyv4kdf1m07zh7pxh";
+    sha256 = "1wrl2mcsga60ps9fa6mf12c7agshwsvcmlrhwsbj1kmng5yqxq9h";
   };
 
   disabled = !isPy3k;

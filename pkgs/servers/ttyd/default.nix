@@ -1,22 +1,22 @@
 { stdenv, fetchFromGitHub
 , pkgconfig, cmake, xxd
-, openssl, libwebsockets, json_c, libuv
+, openssl, libwebsockets, json_c, libuv, zlib
 }:
 
 with builtins;
 
 stdenv.mkDerivation rec {
   pname = "ttyd";
-  version = "1.5.2";
+  version = "1.6.1";
   src = fetchFromGitHub {
     owner = "tsl0922";
     repo = pname;
     rev = "refs/tags/${version}";
-    sha256 = "16nngc3dqrsgpapzvl34c0msgdd1fyp3k8r1jj1m9bch6z2p50bl";
+    sha256 = "1ifgw93g8jaaa6fgfqjnn83n5ccr6l72ynwwwa97hfwjk90r14fg";
   };
 
   nativeBuildInputs = [ pkgconfig cmake xxd ];
-  buildInputs = [ openssl libwebsockets json_c libuv ];
+  buildInputs = [ openssl libwebsockets json_c libuv zlib ];
   enableParallelBuilding = true;
 
   outputs = [ "out" "man" ];

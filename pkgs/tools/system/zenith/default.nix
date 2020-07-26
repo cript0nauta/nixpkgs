@@ -2,17 +2,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "zenith";
-  version = "0.8.1";
+  version = "0.10.0";
 
   src = fetchFromGitHub {
     owner = "bvaisvil";
     repo = pname;
     rev = version;
-    sha256 = "12wbx4zhf1rf13g3mw8vcn8aqk9vcza61vi42y6c1pb2km73qw1h";
+    sha256 = "04nd5gq49y1k9xxrc9ll155k9j42ivscjzx405qyyxv7dpgyw131";
   };
 
-  cargoPatches = [ ./cargo-lock.patch ];
-  cargoSha256 = "1nyci2vjwsyfscsd520d1r5vyazb33hv4mrsysy6amss4jdf2dlq";
+  cargoSha256 = "0ggpr2skl3d47y771npmbbqb9vga4y4iyry3qn0xj2hg9d7msf4l";
 
   buildInputs = stdenv.lib.optionals stdenv.isDarwin [ IOKit ];
 

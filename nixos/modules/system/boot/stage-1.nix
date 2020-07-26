@@ -111,8 +111,8 @@ let
       copy_bin_and_libs ${pkgs.utillinux}/sbin/blkid
 
       # Copy dmsetup and lvm.
-      copy_bin_and_libs ${pkgs.lvm2}/sbin/dmsetup
-      copy_bin_and_libs ${pkgs.lvm2}/sbin/lvm
+      copy_bin_and_libs ${getBin pkgs.lvm2}/bin/dmsetup
+      copy_bin_and_libs ${getBin pkgs.lvm2}/bin/lvm
 
       # Add RAID mdadm tool.
       copy_bin_and_libs ${pkgs.mdadm}/sbin/mdadm
@@ -137,6 +137,8 @@ let
       ''}
 
       # Copy secrets if needed.
+      #
+      # TODO: move out to a separate script; see #85000.
       ${optionalString (!config.boot.loader.supportsInitrdSecrets)
           (concatStringsSep "\n" (mapAttrsToList (dest: source:
              let source' = if source == null then dest else source; in
@@ -233,7 +235,7 @@ let
             --replace cdrom_id ${extraUtils}/bin/cdrom_id \
             --replace ${pkgs.coreutils}/bin/basename ${extraUtils}/bin/basename \
             --replace ${pkgs.utillinux}/bin/blkid ${extraUtils}/bin/blkid \
-            --replace ${pkgs.lvm2}/sbin ${extraUtils}/bin \
+            --replace ${getBin pkgs.lvm2}/bin ${extraUtils}/bin \
             --replace ${pkgs.mdadm}/sbin ${extraUtils}/sbin \
             --replace ${pkgs.bash}/bin/sh ${extraUtils}/bin/sh \
             --replace ${udev} ${extraUtils}
@@ -515,8 +517,7 @@ in
     };
 
     boot.initrd.secrets = mkOption
-      { internal = true;
-        default = {};
+      { default = {};
         type = types.attrsOf (types.nullOr types.path);
         description =
           ''
@@ -578,6 +579,25 @@ in
           resumeDevice == "" || builtins.substring 0 1 resumeDevice == "/";
         message = "boot.resumeDevice has to be an absolute path."
           + " Old \"x:y\" style is no longer supported.";
+      }
+      # TODO: remove when #85000 is fixed
+      { assertion = !config.boot.loader.supportsInitrdSecrets ->
+          all (source:
+            builtins.isPath source ||
+            (builtins.isString source && hasPrefix builtins.storeDir source))
+          (attrValues config.boot.initrd.secrets);
+        message = ''
+          boot.loader.initrd.secrets values must be unquoted paths when
+          using a bootloader that doesn't natively support initrd
+          secrets, e.g.:
+
+            boot.initrd.secrets = {
+              "/etc/secret" = /path/to/secret;
+            };
+
+          Note that this will result in all secrets being stored
+          world-readable in the Nix store!
+        '';
       }
     ];
 

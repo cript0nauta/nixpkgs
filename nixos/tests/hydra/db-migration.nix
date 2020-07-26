@@ -1,8 +1,14 @@
-{ system ? builtins.currentSystem, ... }:
+{ system ? builtins.currentSystem
+, pkgs ? import ../../.. { inherit system; }
+, ...
+}:
 
 let inherit (import ./common.nix { inherit system; }) baseConfig; in
 
-{ mig = import ../make-test-python.nix ({ pkgs, lib, ... }: {
+with import ../../lib/testing-python.nix { inherit system pkgs; };
+with pkgs.lib;
+
+{ mig = makeTest {
     name = "hydra-db-migration";
     meta = with pkgs.stdenv.lib.maintainers; {
       maintainers = [ ma27 ];
@@ -55,7 +61,7 @@ let inherit (import ./common.nix { inherit system; }) baseConfig; in
           'curl -L -s http://localhost:3000/build/1 -H "Accept: application/json" |  jq .buildstatus | xargs test 0 -eq'
       )
 
-      out = original.succeed("su -l postgres -c 'psql -d hydra <<< \"\\d+ jobs\" -A'")
+      out = original.succeed("su -l postgres -c 'psql -d hydra <<< \"\\d+ builds\" -A'")
       assert "jobset_id" not in out
 
       original.succeed(
@@ -63,7 +69,7 @@ let inherit (import ./common.nix { inherit system; }) baseConfig; in
       )
       original.wait_for_unit("hydra-init.service")
 
-      out = original.succeed("su -l postgres -c 'psql -d hydra <<< \"\\d+ jobs\" -A'")
+      out = original.succeed("su -l postgres -c 'psql -d hydra <<< \"\\d+ builds\" -A'")
       assert "jobset_id|integer|||" in out
 
       original.succeed("hydra-backfill-ids")
@@ -73,7 +79,7 @@ let inherit (import ./common.nix { inherit system; }) baseConfig; in
       )
       original.wait_for_unit("hydra-init.service")
 
-      out = original.succeed("su -l postgres -c 'psql -d hydra <<< \"\\d+ jobs\" -A'")
+      out = original.succeed("su -l postgres -c 'psql -d hydra <<< \"\\d+ builds\" -A'")
       assert "jobset_id|integer||not null|" in out
 
       original.wait_until_succeeds(
@@ -82,5 +88,5 @@ let inherit (import ./common.nix { inherit system; }) baseConfig; in
 
       original.shutdown()
     '';
-  });
+  };
 }

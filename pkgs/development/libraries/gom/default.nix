@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "aNCABqqjtYFpznzxg5SY9FaG+6gRXwms7Lidd+EBip0=";
+    sha256 = "17ca07hpg7dqxjn0jpqim3xqcmplk2a87wbwrrlq3dd3m8381l38";
   };
 
   patches = [
@@ -58,6 +58,6 @@ stdenv.mkDerivation rec {
     homepage = "https://wiki.gnome.org/Projects/Gom";
     license = licenses.lgpl21Plus;
     platforms = platforms.linux;
-    maintainers = gnome3.maintainers;
+    maintainers = teams.gnome.members;
   };
 }

@@ -10,7 +10,7 @@
 , cyrus_sasl
 , fetchFromGitLab
 , fetchurl
-, ffmpeg
+, ffmpeg_3
 , gdk-pixbuf
 , glib
 , gnused
@@ -137,7 +137,7 @@ mkDerivation rec {
     bzrtp
     cairo
     cyrus_sasl
-    ffmpeg
+    ffmpeg_3
     gdk-pixbuf
     glib
     gtk2
@@ -223,7 +223,6 @@ mkDerivation rec {
     cp linphone.desktop $out/share/applications/
     cp -r ../assets/icons $out/share/
     mkdir -p $out/share/belr/grammars
-    ln -s ${belcard}/share/belr/grammars/* $out/share/belr/grammars/
     ln -s ${liblinphone}/share/belr/grammars/* $out/share/belr/grammars/
     mkdir -p $out/share/linphone
     ln -s ${liblinphone}/share/linphone/* $out/share/linphone/

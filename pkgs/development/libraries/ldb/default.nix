@@ -16,11 +16,11 @@
 
 stdenv.mkDerivation rec {
   pname = "ldb";
-  version = "2.1.1";
+  version = "2.1.4";
 
   src = fetchurl {
     url = "mirror://samba/ldb/${pname}-${version}.tar.gz";
-    sha256 = "jO+y8l/KkT+hinktDvsDrwf4f1uVGkze0DD1uY8lx7A=";
+    sha256 = "0kmzs2s7fvar9ksaxyiqlh8q8mbwc7bxrq9w1y91zlyb23p142wy";
   };
 
   outputs = [ "out" "dev" ];
@@ -52,7 +52,7 @@ stdenv.mkDerivation rec {
     "--without-ldb-lmdb"
   ];
 
-  stripDebugList = "bin lib modules";
+  stripDebugList = [ "bin" "lib" "modules" ];
 
   meta = with stdenv.lib; {
     description = "A LDAP-like embedded database";

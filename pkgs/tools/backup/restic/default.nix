@@ -1,4 +1,5 @@
-{ stdenv, lib, buildGoPackage, fetchFromGitHub, nixosTests}:
+{ stdenv, lib, buildGoPackage, fetchFromGitHub, installShellFiles, makeWrapper
+, nixosTests, rclone }:
 
 buildGoPackage rec {
   pname = "restic";
@@ -13,23 +14,21 @@ buildGoPackage rec {
     sha256 = "0lydll93n1lcn1fl669b9cikmzz9d6vfpc8ky3ng5fi8kj3v1dz7";
   };
 
+  subPackages = [ "cmd/restic" ];
+
+  nativeBuildInputs = [ installShellFiles makeWrapper ];
+
   passthru.tests.restic = nixosTests.restic;
 
-  # Use a custom install phase here as by default the
-  # build-release-binaries and prepare-releases binaries are
-  # installed.
-  installPhase = ''
-    mkdir -p "$bin/bin"
-    cp go/bin/restic "$bin/bin"
+  postInstall = ''
+    wrapProgram $out/bin/restic --prefix PATH : '${rclone}/bin'
   '' + lib.optionalString (stdenv.hostPlatform == stdenv.buildPlatform) ''
-    mkdir -p \
-      $bin/etc/bash_completion.d \
-      $bin/share/zsh/vendor-completions \
-      $bin/share/man/man1
-    $bin/bin/restic generate \
-      --bash-completion $bin/etc/bash_completion.d/restic.sh \
-      --zsh-completion $bin/share/zsh/vendor-completions/_restic \
-      --man $bin/share/man/man1
+    $out/bin/restic generate \
+      --bash-completion restic.bash \
+      --zsh-completion restic.zsh \
+      --man .
+    installShellCompletion restic.{bash,zsh}
+    installManPage *.1
   '';
 
   meta = with lib; {

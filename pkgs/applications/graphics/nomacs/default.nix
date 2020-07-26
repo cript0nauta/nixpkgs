@@ -18,24 +18,14 @@
 
 mkDerivation rec {
   pname = "nomacs";
-  version = "3.12";
+  version = "3.15.1616";
 
   src = fetchFromGitHub {
     owner = "nomacs";
     repo = "nomacs";
     rev = version;
-    sha256 = "12582i5v85da7vwjxj8grj99hxg34ij5cn3b1578wspdfw1xfy1i";
+    sha256 = "0g1saqf31zncqdiwk7aaf951j3g33bg0vcjcr5mvg600jxiinw8j";
   };
-
-  patches = [
-    ./nomacs-iostream.patch
-    (fetchpatch {
-      name = "darwin-less-restrictive-opencv.patch";
-      url = "https://github.com/nomacs/nomacs/commit/d182fce4bcd9a25bd15e3de065ca67849a32458c.patch";
-      sha256 = "0j6sviwrjn69nqf59hjn30c4j838h8az7rnlwcx8ymlb21vd9x2h";
-      stripLen = 1;
-    })
-  ];
 
   enableParallelBuilding = true;
 
@@ -65,7 +55,7 @@ mkDerivation rec {
   meta = with stdenv.lib; {
     homepage = "https://nomacs.org";
     description = "Qt-based image viewer";
-    maintainers = [maintainers.ahmedtd];
+    maintainers = with stdenv.lib.maintainers; [ mindavi ];
     license = licenses.gpl3Plus;
     repositories.git = "https://github.com/nomacs/nomacs.git";
     inherit (qtbase.meta) platforms;

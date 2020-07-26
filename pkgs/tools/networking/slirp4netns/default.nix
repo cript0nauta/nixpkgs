@@ -6,17 +6,18 @@
 , libcap
 , libseccomp
 , libslirp
+, nixosTests
 }:
 
 stdenv.mkDerivation rec {
   pname = "slirp4netns";
-  version = "1.0.0";
+  version = "1.1.4";
 
   src = fetchFromGitHub {
     owner = "rootless-containers";
     repo = "slirp4netns";
     rev = "v${version}";
-    sha256 = "152wmccz47anvx5w88qcz8higw80l17jl7i24xfj5574adviqnv2";
+    sha256 = "13hlljkqss9abjpwaa5gcn6qnax0ws03zzh45c4rv1if7rwk6nbl";
   };
 
   nativeBuildInputs = [ autoreconfHook pkg-config ];
@@ -24,6 +25,8 @@ stdenv.mkDerivation rec {
   buildInputs = [ glib libcap libseccomp libslirp ];
 
   enableParallelBuilding = true;
+
+  passthru.tests.podman = nixosTests.podman;
 
   meta = with stdenv.lib; {
     homepage = "https://github.com/rootless-containers/slirp4netns";

@@ -1,12 +1,12 @@
 { stdenv, glibcLocales, python3 }:
 
 python3.pkgs.buildPythonApplication rec {
-  version = "0.16.0";
+  version = "0.16.1";
   pname = "khard";
 
   src = python3.pkgs.fetchPypi {
     inherit pname version;
-    sha256 = "0a1zpkq0pplmn9flxczq2wafs6zc07r9xx9qi6dqmyv9mhy9d87f";
+    sha256 = "0fg4qh5gzki5wg958wlpc8a2icnk74gzg33lqxjm755cfnjng7qd";
   };
 
   propagatedBuildInputs = with python3.pkgs; [
@@ -20,6 +20,11 @@ python3.pkgs.buildPythonApplication rec {
 
   postInstall = ''
     install -D misc/zsh/_khard $out/share/zsh/site-functions/_khard
+  '';
+
+  preCheck = ''
+    # see https://github.com/scheibler/khard/issues/263
+    export COLUMNS=80
   '';
 
   meta = {

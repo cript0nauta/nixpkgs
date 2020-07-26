@@ -21,7 +21,7 @@ assert sendEmailSupport -> perlSupport;
 assert svnSupport -> perlSupport;
 
 let
-  version = "2.25.1";
+  version = "2.27.0";
   svn = subversionClient.override { perlBindings = perlSupport; };
 
   gitwebPerlLibs = with perlPackages; [ CGI HTMLParser CGIFast FCGI FCGIProcManager HTMLTagCloud ];
@@ -33,10 +33,10 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://www.kernel.org/pub/software/scm/git/git-${version}.tar.xz";
-    sha256 = "09lzwa183nblr6l8ib35g2xrjf9wm9yhk3szfvyzkwivdv69c9r2";
+    sha256 = "1ybk39ylvs32lywq7ra4l2kdr5izc80r9461hwfnw8pssxs9gjkk";
   };
 
-  outputs = [ "out" ];
+  outputs = [ "out" ] ++ stdenv.lib.optional withManual "doc";
 
   hardeningDisable = [ "format" ];
 
@@ -80,6 +80,8 @@ stdenv.mkDerivation {
   configureFlags = stdenv.lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
     "ac_cv_fread_reads_directories=yes"
     "ac_cv_snprintf_returns_bogus=no"
+    "ac_cv_iconv_omits_bom=no"
+    "ac_cv_prog_CURL_CONFIG=${curl.dev}/bin/curl-config"
   ];
 
   preBuild = ''
@@ -189,7 +191,7 @@ stdenv.mkDerivation {
       ln -s $out/libexec/git-core/git-http-backend $out/bin/git-http-backend
     '' + stdenv.lib.optionalString perlSupport ''
       # wrap perl commands
-      makeWrapper "$out/share/git/contrib/credential/netrc/git-credential-netrc" $out/bin/git-credential-netrc \
+      makeWrapper "$out/share/git/contrib/credential/netrc/git-credential-netrc.perl" $out/bin/git-credential-netrc \
                   --set PERL5LIB   "$out/${perlPackages.perl.libPrefix}:${perlPackages.makePerlPath perlLibs}"
       wrapProgram $out/libexec/git-core/git-cvsimport \
                   --set GITPERLLIB "$out/${perlPackages.perl.libPrefix}:${perlPackages.makePerlPath perlLibs}"
@@ -232,7 +234,7 @@ stdenv.mkDerivation {
       '')
 
    + stdenv.lib.optionalString withManual ''# Install man pages and Info manual
-       make -j $NIX_BUILD_CORES -l $NIX_BUILD_CORES PERL_PATH="${buildPackages.perl}/bin/perl" cmd-list.made install install-info \
+       make -j $NIX_BUILD_CORES -l $NIX_BUILD_CORES PERL_PATH="${buildPackages.perl}/bin/perl" cmd-list.made install install-html install-info \
          -C Documentation ''
 
    + (if guiSupport then ''
@@ -284,13 +286,14 @@ stdenv.mkDerivation {
         mv t/{,skip-}$test.sh || true
       else
         sed -i t/$test.sh \
-          -e "/^ *test_expect_.*$pattern/,/^ *' *\$/{s/^/#/}"
+          -e "/^\s*test_expect_.*$pattern/,/^\s*' *\$/{s/^/: #/}"
       fi
     }
 
     # Shared permissions are forbidden in sandbox builds.
     disable_test t0001-init shared
     disable_test t1301-shared-repo
+    disable_test t5324-split-commit-graph 'split commit-graph respects core.sharedrepository'
 
     # Our patched gettext never fallbacks
     disable_test t0201-gettext-fallbacks
@@ -333,6 +336,7 @@ stdenv.mkDerivation {
     homepage = "https://git-scm.com/";
     description = "Distributed version control system";
     license = stdenv.lib.licenses.gpl2;
+    changelog = "https://raw.githubusercontent.com/git/git/${version}/Documentation/RelNotes/${version}.txt";
 
     longDescription = ''
       Git, a popular distributed version control system designed to
@@ -340,6 +344,6 @@ stdenv.mkDerivation {
     '';
 
     platforms = stdenv.lib.platforms.all;
-    maintainers = with stdenv.lib.maintainers; [ peti the-kenny wmertens globin ];
+    maintainers = with stdenv.lib.maintainers; [ primeos peti wmertens globin ];
   };
 }

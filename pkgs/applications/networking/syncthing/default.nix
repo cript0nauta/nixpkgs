@@ -1,19 +1,19 @@
-{ buildGoModule, stdenv, lib, procps, fetchFromGitHub }:
+{ buildGoModule, stdenv, lib, procps, fetchFromGitHub, nixosTests }:
 
 let
   common = { stname, target, postInstall ? "" }:
     buildGoModule rec {
-      version = "1.4.2";
+      version = "1.7.1";
       name = "${stname}-${version}";
 
       src = fetchFromGitHub {
         owner  = "syncthing";
         repo   = "syncthing";
         rev    = "v${version}";
-        sha256 = "0pfzpbdir2agwsyfjh1rxlyyd225xmyrr4k2g4vlg5r12kpcjwya";
+        sha256 = "1kb324diaq48z1vf36zlcsy9zckr0c3mrd3bmcdn28z2ivqnsc4a";
       };
 
-      modSha256 = "0qjhb55nd8mlnswbk8bgl2sb9angmv8fnympmmyqj1dqa7lcs87z";
+      vendorSha256 = "1gmdv0g0gymq6khrwvplw6yfp146kg5ar8vqdp5dlp0myxfzi22b";
 
       patches = [
         ./add-stcli-target.patch
@@ -34,6 +34,11 @@ let
       '';
 
       inherit postInstall;
+
+      passthru.tests = with nixosTests; {
+        init = syncthing-init;
+        relay = syncthing-relay;
+      };
 
       meta = with lib; {
         homepage = "https://www.syncthing.net/";

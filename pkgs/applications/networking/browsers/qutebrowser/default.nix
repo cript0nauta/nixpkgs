@@ -2,8 +2,9 @@
 , mkDerivationWith, wrapQtAppsHook, wrapGAppsHook, qtbase, glib-networking
 , asciidoc, docbook_xml_dtd_45, docbook_xsl, libxml2
 , libxslt, gst_all_1 ? null
-, withPdfReader        ? true
-, withMediaPlayback    ? true
+, withPdfReader      ? true
+, withMediaPlayback  ? true
+, backend            ? "webkit"
 }:
 
 assert withMediaPlayback -> gst_all_1 != null;
@@ -19,14 +20,22 @@ let
     stripRoot = false;
   };
 
+  backendPackage =
+   if backend == "webengine" then python3Packages.pyqtwebengine else
+   if backend == "webkit"    then python3Packages.pyqt5_with_qtwebkit else
+   throw ''
+     Unknown qutebrowser backend "${backend}".
+     Valid choices are qtwebengine (recommended) or qtwebkit.
+   '';
+
 in mkDerivationWith python3Packages.buildPythonApplication rec {
   pname = "qutebrowser";
-  version = "1.10.1";
+  version = "1.13.0";
 
   # the release tarballs are different from the git checkout!
   src = fetchurl {
     url = "https://github.com/qutebrowser/qutebrowser/releases/download/v${version}/${pname}-${version}.tar.gz";
-    sha256 = "06bcnsfb4kz92bh8xjxwaghhy9x2mmcb76wk3fv868jb1ga75vd8";
+    sha256 = "1xq0a0mcssc1ss4fvhhwr75dhlh3nr9w46i2gmqczzh5cynk1sfk";
   };
 
   # Needs tox
@@ -46,22 +55,20 @@ in mkDerivationWith python3Packages.buildPythonApplication rec {
   ];
 
   propagatedBuildInputs = with python3Packages; [
-    pyyaml pyqt5 pyqtwebengine jinja2 pygments
+    pyyaml backendPackage jinja2 pygments
     pypeg2 cssutils pyopengl attrs setuptools
     # scripts and userscripts libs
     tldextract beautifulsoup4
     pyreadability pykeepass stem
   ];
 
-  patches = [
-    ./fix-restart.patch
-  ];
+  patches = [ ./fix-restart.patch ];
 
   dontWrapGApps = true;
   dontWrapQtApps = true;
 
   postPatch = ''
-    substituteInPlace qutebrowser/app.py --subst-var-by qutebrowser "$out/bin/qutebrowser"
+    substituteInPlace qutebrowser/misc/quitter.py --subst-var-by qutebrowser "$out/bin/qutebrowser"
 
     sed -i "s,/usr/share/,$out/share/,g" qutebrowser/utils/standarddir.py
   '' + lib.optionalString withPdfReader ''
@@ -101,7 +108,8 @@ in mkDerivationWith python3Packages.buildPythonApplication rec {
   postFixup = ''
     wrapProgram $out/bin/qutebrowser \
       "''${gappsWrapperArgs[@]}" \
-      "''${qtWrapperArgs[@]}"
+      "''${qtWrapperArgs[@]}" \
+      --add-flags '--backend ${backend}'
   '';
 
   meta = with stdenv.lib; {

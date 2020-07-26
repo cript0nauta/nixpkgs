@@ -1,17 +1,20 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoPackage, fetchFromGitHub }:
 
-buildGoModule rec {
+buildGoPackage rec {
   pname = "VictoriaMetrics";
-  version = "1.34.5";
+  version = "1.37.4";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "v${version}";
-    sha256 = "0isifyvbrv0f6l32dycka67cpnizwh2c9ns2q8pz6r2myzbdsf3s";
+    sha256 = "02jr0qz130jz7ncfch1jry0prd00669j53mlmpb6ky0xiz5y2zq1";
   };
 
-  modSha256 = "0fr5yah4qicqjfgina1ghflaz8dlzsqk3rrpsvg5l68jb6l7nxkb";
+  goPackagePath = "github.com/VictoriaMetrics/VictoriaMetrics";
+
+  buildFlagsArray = [ "-ldflags=-s -w -X ${goPackagePath}/lib/buildinfo.Version=${version}" ];
+
   meta = with lib; {
     homepage = "https://victoriametrics.com/";
     description = "fast, cost-effective and scalable time series database, long-term remote storage for Prometheus";

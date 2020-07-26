@@ -4,7 +4,7 @@
 } :
 
 let
-  version = "28.0";
+  version = "30.0";
 
 in stdenv.mkDerivation {
   pname = "rdma-core";
@@ -14,7 +14,7 @@ in stdenv.mkDerivation {
     owner = "linux-rdma";
     repo = "rdma-core";
     rev = "v${version}";
-    sha256 = "0az2is6p5gkyphi2b978kwn7knry60y33kn6p7cxz49ca79a42cy";
+    sha256 = "1czfh6s0qz2cv2k7ha7nr9qiwcrj5lvwqnvyrvsds463m8ndpg12";
   };
 
   nativeBuildInputs = [ cmake pkgconfig pandoc docutils makeWrapper ];

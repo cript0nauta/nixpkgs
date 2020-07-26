@@ -1,39 +1,37 @@
-{ stdenv, buildGoPackage, fetchFromGitHub, bash, go-bindata}:
+{ stdenv, buildGoModule, fetchFromGitHub, go-bindata, nixosTests }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "traefik";
-  version = "1.7.14";
-
-  goPackagePath = "github.com/containous/traefik";
+  version = "2.2.4";
 
   src = fetchFromGitHub {
     owner = "containous";
     repo = "traefik";
     rev = "v${version}";
-    sha256 = "1j3p09j8rpdkp8v4d4mz224ddakkvhzchvccm9qryrqc2fq4022v";
+    sha256 = "1zxifwbrhxaj2pl6kwyk1ivr4in0wd0q01x9ynxzbf6w2yx4xkw2";
   };
 
-  nativeBuildInputs = [ go-bindata bash ];
+  vendorSha256 = "0kz7y64k07vlybzfjg6709fdy7krqlv1gkk01nvhs84sk8bnrcvn";
+  subPackages = [ "cmd/traefik" ];
 
-  buildPhase = ''
-    runHook preBuild
-    (
-      cd go/src/github.com/containous/traefik
-      bash ./script/make.sh generate
+  nativeBuildInputs = [ go-bindata ];
 
-      CODENAME=$(awk -F "=" '/CODENAME=/ { print $2}' script/binary)
-      go build -ldflags "\
-        -X github.com/containous/traefik/version.Version=${version} \
-        -X github.com/containous/traefik/version.Codename=$CODENAME \
-      " -a -o $bin/bin/traefik ./cmd/traefik
-    )
-    runHook postBuild
+  passthru.tests = { inherit (nixosTests) traefik; };
+
+  preBuild = ''
+    go generate
+
+    CODENAME=$(awk -F "=" '/CODENAME=/ { print $2}' script/binary)
+
+    makeFlagsArray+=("-ldflags=\
+      -X github.com/containous/traefik/version.Version=${version} \
+      -X github.com/containous/traefik/version.Codename=$CODENAME")
   '';
 
   meta = with stdenv.lib; {
     homepage = "https://traefik.io";
     description = "A modern reverse proxy";
     license = licenses.mit;
-    maintainers = with maintainers; [ hamhut1066 vdemeester ];
+    maintainers = with maintainers; [ vdemeester ];
   };
 }

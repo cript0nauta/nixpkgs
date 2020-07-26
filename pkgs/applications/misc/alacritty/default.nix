@@ -52,16 +52,16 @@ let
 in
 rustPlatform.buildRustPackage rec {
   pname = "alacritty";
-  version = "0.4.2";
+  version = "0.4.3";
 
   src = fetchFromGitHub {
     owner = "alacritty";
     repo = pname;
     rev = "v${version}";
-    sha256 = "133d8vm7ihlvgw8n1jghhh35h664h0f52h6gci54f11vl6c1spws";
+    sha256 = "1b6fspcd8yn1857cgn1m8a828bvjspvrfc2giwsa9ai0ighcqbgl";
   };
 
-  cargoSha256 = "07gq63qd11zz229b8jp9wqggz39qfpzd223z1zk1xch7rhqq0pn4";
+  cargoSha256 = "1zadnwjqk9kklj0p43azd78kgbva2zihh9wh81w4c5y0kypbchyd";
 
   nativeBuildInputs = [
     cmake
@@ -90,20 +90,25 @@ rustPlatform.buildRustPackage rec {
       --replace xdg-open ${xdg_utils}/bin/xdg-open
   '';
 
-  postBuild = lib.optionalString stdenv.isDarwin "make app";
-
   installPhase = ''
     runHook preInstall
 
-    install -D target/release/alacritty $out/bin/alacritty
+    install -D $releaseDir/alacritty $out/bin/alacritty
 
   '' + (
     if stdenv.isDarwin then ''
       mkdir $out/Applications
-      cp -r target/release/osx/Alacritty.app $out/Applications/Alacritty.app
+      cp -r extra/osx/Alacritty.app $out/Applications
+      ln -s $out/bin $out/Applications/Alacritty.app/Contents/MacOS
     '' else ''
       install -D extra/linux/Alacritty.desktop -t $out/share/applications/
-      install -D extra/logo/alacritty-term.svg $out/share/icons/hicolor/scalable/apps/Alacritty.svg
+      install -D extra/logo/compat/alacritty-term.svg $out/share/icons/hicolor/scalable/apps/Alacritty.svg
+
+      # patchelf generates an ELF that binutils' "strip" doesn't like:
+      #    strip: not enough room for program headers, try linking with -N
+      # As a workaround, strip manually before running patchelf.
+      strip -S $out/bin/alacritty
+
       patchelf --set-rpath "${lib.makeLibraryPath rpathLibs}" $out/bin/alacritty
     ''
   ) + ''
@@ -114,6 +119,8 @@ rustPlatform.buildRustPackage rec {
 
     install -dm 755 "$out/share/man/man1"
     gzip -c extra/alacritty.man > "$out/share/man/man1/alacritty.1.gz"
+
+    install -Dm 644 alacritty.yml $out/share/doc/alacritty.yml
 
     install -dm 755 "$terminfo/share/terminfo/a/"
     tic -xe alacritty,alacritty-direct -o "$terminfo/share/terminfo" extra/alacritty.info
@@ -129,7 +136,7 @@ rustPlatform.buildRustPackage rec {
     description = "A cross-platform, GPU-accelerated terminal emulator";
     homepage = "https://github.com/alacritty/alacritty";
     license = licenses.asl20;
-    maintainers = with maintainers; [ filalex77 mic92 cole-h ];
+    maintainers = with maintainers; [ filalex77 mic92 cole-h ma27 ];
     platforms = platforms.unix;
   };
 }

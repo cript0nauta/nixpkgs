@@ -40,8 +40,13 @@ let
   throwSystem = throw "Unsupported system: ${system}";
 
   sha256 = {
-    x86_64-darwin = "05xsbiviikrwfayjr6rvvfkm70681x2an6mgcg1cxw1fsi4sr6fd";
-    x86_64-linux = "0h2rfgx92yq9a6dqsv9a0r8a6m5xfrywkljjk5w9snw49b0r1p12";
+    x86_64-darwin = "09daxnqxyccshkrmr7ysgjvgvgmlgd590ym68fz0l8n6ayfpkgw0";
+    x86_64-linux = "00ihhsgxm441nsmav7pq4n4y9s7p2r4x5dqld160658xyqi836cq";
+  }.${system} or throwSystem;
+
+  version = {
+    x86_64-darwin = "4.6.0";
+    x86_64-linux = "4.4.3";
   }.${system} or throwSystem;
 
   meta = with stdenv.lib; {
@@ -53,8 +58,7 @@ let
   };
 
   linux = stdenv.mkDerivation rec {
-    inherit pname meta;
-    version = "4.4.0";
+    inherit pname meta version;
     src = fetchurl {
       url = "https://downloads.slack-edge.com/linux_releases/slack-desktop-${version}-amd64.deb";
       inherit sha256;
@@ -140,8 +144,7 @@ let
   };
 
   darwin = stdenv.mkDerivation rec {
-    inherit pname meta;
-    version = "4.4.1";
+    inherit pname meta version;
 
     phases = [ "installPhase" ];
 
@@ -155,7 +158,7 @@ let
       mkdir -p $out/Applications
       cp -r ./slack-mnt/Slack.app $out/Applications
       /usr/bin/hdiutil unmount slack-mnt
-      defaults write com.tinyspeck.slackmacgap SlackNoAutoUpdates -bool YES
+      /usr/bin/defaults write com.tinyspeck.slackmacgap SlackNoAutoUpdates -bool YES
     '';
   };
 in if stdenv.isDarwin

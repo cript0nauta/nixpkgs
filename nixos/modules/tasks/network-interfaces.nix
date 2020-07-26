@@ -283,7 +283,7 @@ let
         default = false;
         type = types.bool;
         description = ''
-          Turn on proxy_arp for this device (and proxy_ndp for ipv6).
+          Turn on proxy_arp for this device.
           This is mainly useful for creating pseudo-bridges between a real
           interface and a virtual network such as VPN or a virtual machine for
           interfaces that don't support real bridging (most wlan interfaces).
@@ -376,10 +376,20 @@ in
 
     networking.hostName = mkOption {
       default = "nixos";
-      type = types.str;
+      # Only allow hostnames without the domain name part (i.e. no FQDNs, see
+      # e.g. "man 5 hostname") and require valid DNS labels (recommended
+      # syntax). Note: We also allow underscores for compatibility/legacy
+      # reasons (as undocumented feature):
+      type = types.strMatching
+        "^$|^[[:alpha:]]([[:alnum:]_-]{0,61}[[:alnum:]])?$";
       description = ''
-        The name of the machine.  Leave it empty if you want to obtain
-        it from a DHCP server (if using DHCP).
+        The name of the machine. Leave it empty if you want to obtain it from a
+        DHCP server (if using DHCP). The hostname must be a valid DNS label (see
+        RFC 1035 section 2.3.1: "Preferred name syntax") and as such must not
+        contain the domain part. This means that the hostname must start with a
+        letter, end with a letter or digit, and have as interior characters only
+        letters, digits, and hyphen. The maximum length is 63 characters.
+        Additionally it is recommended to only use lower-case characters.
       '';
     };
 
@@ -1031,6 +1041,11 @@ in
         message = ''
           Temporary addresses are only needed when IPv6 is enabled.
         '';
+      })) ++ (forEach interfaces (i: {
+        assertion = (i.virtual && i.virtualType == "tun") -> i.macAddress == null;
+        message = ''
+          Setting a MAC Address for tun device ${i.name} isn't supported.
+        '';
       })) ++ [
         {
           assertion = cfg.hostId == null || (stringLength cfg.hostId == 8 && isHexString cfg.hostId);
@@ -1050,11 +1065,11 @@ in
       optionalString hasBonds "options bonding max_bonds=0";
 
     boot.kernel.sysctl = {
+      "net.ipv4.conf.all.forwarding" = mkDefault (any (i: i.proxyARP) interfaces);
       "net.ipv6.conf.all.disable_ipv6" = mkDefault (!cfg.enableIPv6);
       "net.ipv6.conf.default.disable_ipv6" = mkDefault (!cfg.enableIPv6);
-      "net.ipv6.conf.all.forwarding" = mkDefault (any (i: i.proxyARP) interfaces);
     } // listToAttrs (flip concatMap (filter (i: i.proxyARP) interfaces)
-        (i: forEach [ "4" "6" ] (v: nameValuePair "net.ipv${v}.conf.${replaceChars ["."] ["/"] i.name}.proxy_arp" true)))
+        (i: [(nameValuePair "net.ipv4.conf.${replaceChars ["."] ["/"] i.name}.proxy_arp" true)]))
       // listToAttrs (forEach interfaces
         (i: let
           opt = i.tempAddress;
@@ -1140,38 +1155,7 @@ in
           ${cfg.localCommands}
         '';
       };
-    } // (listToAttrs (forEach interfaces (i:
-      let
-        deviceDependency = if (config.boot.isContainer || i.name == "lo")
-          then []
-          else [ (subsystemDevice i.name) ];
-      in
-      nameValuePair "network-link-${i.name}"
-      { description = "Link configuration of ${i.name}";
-        wantedBy = [ "network-interfaces.target" ];
-        before = [ "network-interfaces.target" ];
-        bindsTo = deviceDependency;
-        after = [ "network-pre.target" ] ++ deviceDependency;
-        path = [ pkgs.iproute ];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-        };
-        script =
-          ''
-            echo "Configuring link..."
-          '' + optionalString (i.macAddress != null) ''
-            echo "setting MAC address to ${i.macAddress}..."
-            ip link set "${i.name}" address "${i.macAddress}"
-          '' + optionalString (i.mtu != null) ''
-            echo "setting MTU to ${toString i.mtu}..."
-            ip link set "${i.name}" mtu "${toString i.mtu}"
-          '' + ''
-            echo -n "bringing up interface... "
-            ip link set "${i.name}" up && echo "done" || (echo "failed"; exit 1)
-          '';
-      })));
-
+    };
     services.mstpd = mkIf needsMstpd { enable = true; };
 
     virtualisation.vswitch = mkIf (cfg.vswitches != { }) { enable = true; };

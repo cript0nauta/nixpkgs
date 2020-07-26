@@ -32,11 +32,11 @@
 
 stdenv.mkDerivation rec {
   pname = "nautilus";
-  version = "3.36.1.1";
+  version = "3.36.3";
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "1pkvxyfm2fl06fpyq2jr147hhpc91y4rgdlxlilg7n8ih982y9gr";
+    sha256 = "1y0fsd7j48v4qkc051cg41mz7jycgw4vd4g37lw682p7n5xgrjmn";
   };
 
   nativeBuildInputs = [
@@ -102,6 +102,6 @@ stdenv.mkDerivation rec {
     homepage = "https://wiki.gnome.org/Apps/Files";
     license = licenses.gpl3Plus;
     platforms = platforms.linux;
-    maintainers = gnome3.maintainers;
+    maintainers = teams.gnome.members;
   };
 }

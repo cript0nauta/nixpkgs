@@ -12,7 +12,7 @@
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  version = "0.29.3";
+  version = "0.30";
   pname = "notmuch";
 
   passthru = {
@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://notmuchmail.org/releases/${pname}-${version}.tar.xz";
-    sha256 = "0dfwa38vgnxk9cvvpza66szjgp8lir6iz6yy0cry9593lywh9xym";
+    sha256 = "1ylnj12f7xr18v3ckb1nwc2aw2rj3ghqnj5f4rzccr8xw5pslfsy";
   };
 
   nativeBuildInputs = [
@@ -55,7 +55,7 @@ stdenv.mkDerivation rec {
   configureFlags = [
     "--zshcompletiondir=${placeholder "out"}/share/zsh/site-functions"
     "--bashcompletiondir=${placeholder "out"}/share/bash-completion/completions"
-    "--infodir=${placeholder "info"}"
+    "--infodir=${placeholder "info"}/share/info"
   ] ++ optional (!withEmacs) "--without-emacs"
     ++ optional (withEmacs) "--emacslispdir=${placeholder "emacs"}/share/emacs/site-lisp"
     ++ optional (isNull ruby) "--without-ruby";
@@ -96,7 +96,7 @@ stdenv.mkDerivation rec {
     description = "Mail indexer";
     homepage    = "https://notmuchmail.org/";
     license     = licenses.gpl3;
-    maintainers = with maintainers; [ flokli puckipedia the-kenny ];
+    maintainers = with maintainers; [ flokli puckipedia ];
     platforms   = platforms.unix;
   };
 }

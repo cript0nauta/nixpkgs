@@ -5,11 +5,11 @@
 
 python.pkgs.buildPythonApplication rec {
   pname = "bcc";
-  version = "0.13.0";
+  version = "0.15.0";
 
   src = fetchurl {
     url = "https://github.com/iovisor/bcc/releases/download/v${version}/bcc-src-with-submodule.tar.gz";
-    sha256 = "15xpwf17x2j1c1wcb84cgfs35dp5w0rjd9mllmddmdjvn303wffx";
+    sha256 = "1k00xbhdzdvqp4hfxpgg34bbhnx597jjhpg1x6dz2w80r7xzsj28";
   };
   format = "other";
 

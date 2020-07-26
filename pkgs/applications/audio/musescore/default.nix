@@ -1,6 +1,7 @@
 { stdenv, mkDerivation, lib, fetchzip, cmake, pkgconfig
 , alsaLib, freetype, libjack2, lame, libogg, libpulseaudio, libsndfile, libvorbis
-, portaudio, portmidi, qtbase, qtdeclarative, qtscript, qtsvg, qttools
+, portaudio, portmidi, qtbase, qtdeclarative, qtgraphicaleffects
+, qtquickcontrols2, qtscript, qtsvg, qttools
 , qtwebengine, qtxmlpatterns
 }:
 
@@ -26,14 +27,15 @@ mkDerivation rec {
   buildInputs = [
     alsaLib libjack2 freetype lame libogg libpulseaudio libsndfile libvorbis
     portaudio portmidi # tesseract
-    qtbase qtdeclarative qtscript qtsvg qttools qtwebengine qtxmlpatterns
+    qtbase qtdeclarative qtgraphicaleffects qtquickcontrols2
+    qtscript qtsvg qttools qtwebengine qtxmlpatterns
   ];
 
   meta = with stdenv.lib; {
     description = "Music notation and composition software";
     homepage = "https://musescore.org/";
     license = licenses.gpl2;
-    maintainers = with maintainers; [ vandenoever ];
+    maintainers = with maintainers; [ vandenoever turion ];
     platforms = platforms.linux;
     repositories.git = "https://github.com/musescore/MuseScore";
   };

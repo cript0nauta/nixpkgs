@@ -64,6 +64,7 @@ self: super: {
   monad-par = dontCheck super.monad-par;  # https://github.com/simonmar/monad-par/issues/66
   github = dontCheck super.github; # hspec upper bound exceeded; https://github.com/phadej/github/pull/341
   binary-orphans = dontCheck super.binary-orphans; # tasty upper bound exceeded; https://github.com/phadej/binary-orphans/commit/8ce857226595dd520236ff4c51fa1a45d8387b33
+  rebase = doJailbreak super.rebase; # time ==1.9.* is too low
 
   # https://github.com/jgm/skylighting/issues/55
   skylighting-core = dontCheck super.skylighting-core;
@@ -88,4 +89,9 @@ self: super: {
   stylish-cabal = doDistribute (markUnbroken (super.stylish-cabal.override { haddock-library = self.haddock-library_1_7_0; }));
   haddock-library_1_7_0 = dontCheck super.haddock-library_1_7_0;
 
+  # ghc versions prior to 8.8.x needs additional dependency to compile successfully.
+  ghc-lib-parser-ex = addBuildDepend super.ghc-lib-parser-ex self.ghc-lib-parser;
+
+  # Only 0.6 is compatible with ghc 8.6 https://hackage.haskell.org/package/apply-refact/changelog
+  apply-refact = super.apply-refact_0_6_0_0;
 }

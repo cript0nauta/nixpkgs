@@ -11,8 +11,8 @@ let
       base = pkgs.php74;
     in
       base.buildEnv {
-        extensions = e: with e;
-          base.enabledExtensions ++ [
+        extensions = { enabled, all }: with all;
+          enabled ++ [
             apcu redis memcached imagick
           ];
         extraConfig = phpOptionsStr;
@@ -34,7 +34,7 @@ let
     cd ${cfg.package}
     sudo=exec
     if [[ "$USER" != nextcloud ]]; then
-      sudo='exec /run/wrappers/bin/sudo -u nextcloud --preserve-env=NEXTCLOUD_CONFIG_DIR'
+      sudo='exec /run/wrappers/bin/sudo -u nextcloud --preserve-env=NEXTCLOUD_CONFIG_DIR --preserve-env=OC_PASS'
     fi
     export NEXTCLOUD_CONFIG_DIR="${cfg.home}/config"
     $sudo \
@@ -69,7 +69,7 @@ in {
     package = mkOption {
       type = types.package;
       description = "Which package to use for the Nextcloud instance.";
-      relatedPackages = [ "nextcloud17" "nextcloud18" ];
+      relatedPackages = [ "nextcloud17" "nextcloud18" "nextcloud19" ];
     };
 
     maxUploadSize = mkOption {
@@ -303,6 +303,14 @@ in {
         '';
       };
     };
+    occ = mkOption {
+      type = types.package;
+      default = occ;
+      internal = true;
+      description = ''
+        The nextcloud-occ program preconfigured to target this Nextcloud instance.
+      '';
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -322,12 +330,30 @@ in {
           Please migrate your configuration to config.services.nextcloud.poolSettings.
         '')
         ++ (optional (versionOlder cfg.package.version "18") ''
-          You're currently deploying an older version of Nextcloud. This may be needed
-          since Nextcloud doesn't allow major version upgrades across multiple versions (i.e. an
-          upgrade from 16 is possible to 17, but not to 18).
+          A legacy Nextcloud install (from before NixOS 20.03) may be installed.
 
-          Please deploy this to your server and wait until the migration is finished. After
-          that you can deploy to the latest Nextcloud version available.
+          You're currently deploying an older version of Nextcloud. This may be needed
+          since Nextcloud doesn't allow major version upgrades that skip multiple
+          versions (i.e. an upgrade from 16 is possible to 17, but not 16 to 18).
+
+          It is assumed that Nextcloud will be upgraded from version 16 to 17.
+
+           * If this is a fresh install, there will be no upgrade to do now.
+
+           * If this server already had Nextcloud installed, first deploy this to your
+             server, and wait until the upgrade to 17 is finished.
+
+          Then, set `services.nextcloud.package` to `pkgs.nextcloud18` to upgrade to
+          Nextcloud version 18. Please note that Nextcloud 19 is already out and it's
+          recommended to upgrade to nextcloud19 after that.
+        '')
+        ++ (optional (versionOlder cfg.package.version "19") ''
+          A legacy Nextcloud install (from before NixOS 20.09/unstable) may be installed.
+
+          If/After nextcloud18 is installed successfully, you can safely upgrade to
+          nextcloud19. If not, please upgrade to nextcloud18 first since Nextcloud doesn't
+          support upgrades that skip multiple versions (i.e. an upgrade from 17 to 19 isn't
+          possible, but an upgrade from 18 to 19).
         '');
 
       services.nextcloud.package = with pkgs;
@@ -339,7 +365,8 @@ in {
               `pkgs.nextcloud`.
             ''
           else if versionOlder stateVersion "20.03" then nextcloud17
-          else nextcloud18
+          else if versionOlder stateVersion "20.09" then nextcloud18
+          else nextcloud19
         );
     }
 
@@ -351,6 +378,11 @@ in {
       };
 
       systemd.services = {
+        # When upgrading the Nextcloud package, Nextcloud can report errors such as
+        # "The files of the app [all apps in /var/lib/nextcloud/apps] were not replaced correctly"
+        # Restarting phpfpm on Nextcloud package update fixes these issues (but this is a workaround).
+        phpfpm-nextcloud.restartTriggers = [ cfg.package ];
+
         nextcloud-setup = let
           c = cfg.config;
           writePhpArrary = a: "[${concatMapStringsSep "," (val: ''"${toString val}"'') a}]";

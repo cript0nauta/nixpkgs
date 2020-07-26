@@ -5,13 +5,13 @@
 
 let
   pname = "gnome-maps";
-  version = "3.36.1";
+  version = "3.36.4";
 in stdenv.mkDerivation rec {
   name = "${pname}-${version}";
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${name}.tar.xz";
-    sha256 = "1yajq2pxd4fbzngwhn92h55rn02psxih8bbdcdxgg66qdbcyychs";
+    sha256 = "1ila7li9yi4lyjc84a787qr33wr7ayppphxn451jzg410pfcamhz";
   };
 
   doCheck = true;
@@ -50,7 +50,7 @@ in stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     homepage = "https://wiki.gnome.org/Apps/Maps";
     description = "A map application for GNOME 3";
-    maintainers = gnome3.maintainers;
+    maintainers = teams.gnome.members;
     license = licenses.gpl2Plus;
     platforms = platforms.linux;
   };

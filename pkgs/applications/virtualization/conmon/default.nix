@@ -4,24 +4,27 @@
 , glib
 , glibc
 , systemd
+, nixosTests
 }:
 
 stdenv.mkDerivation rec {
   pname = "conmon";
-  version = "2.0.15";
+  version = "2.0.19";
 
   src = fetchFromGitHub {
     owner = "containers";
     repo = pname;
     rev = "v${version}";
-    sha256 = "1fshcmnfqzbagzcrh5nxw7pi0dd60xpq47a2lzfghklqhl1h0b5i";
+    sha256 = "005sz8aimbfm12d99q79yvsqczxbvbbgc725pavcbly3k1qva207";
   };
 
   nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ glib systemd ] ++
-    stdenv.lib.optionals (!stdenv.hostPlatform.isMusl) [ glibc glibc.static ];
+  buildInputs = [ glib systemd ]
+  ++ stdenv.lib.optionals (!stdenv.hostPlatform.isMusl) [ glibc glibc.static ];
 
-  installPhase = "install -Dm755 bin/${pname} $out/bin/${pname}";
+  installFlags = [ "PREFIX=$(out)" ];
+
+  passthru.tests.podman = nixosTests.podman;
 
   meta = with stdenv.lib; {
     homepage = "https://github.com/containers/conmon";

@@ -1,10 +1,11 @@
 { stdenv, lib, coursier, jdk, jre, makeWrapper }:
 
-let
-  baseName = "metals";
-  version = "0.8.3";
+stdenv.mkDerivation rec {
+  pname = "metals";
+  version = "0.9.2";
+
   deps = stdenv.mkDerivation {
-    name = "${baseName}-deps-${version}";
+    name = "${pname}-deps-${version}";
     buildCommand = ''
       export COURSIER_CACHE=$(pwd)
       ${coursier}/bin/coursier fetch org.scalameta:metals_2.12:${version} \
@@ -15,11 +16,8 @@ let
     '';
     outputHashMode = "recursive";
     outputHashAlgo = "sha256";
-    outputHash     = "1l196glr7rbsvrqmq6i7iw532jkz8d1w5m9nh0kh5z12visc7bkk";
+    outputHash     = "1gnf2p578nk1ygx3cc4mb7fa690c51nbdwvc2qz2805m4xg3x7zv";
   };
-in
-stdenv.mkDerivation rec {
-  name = "${baseName}-${version}";
 
   nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ jdk deps ];
@@ -31,6 +29,13 @@ stdenv.mkDerivation rec {
   installPhase = ''
     mkdir -p $out/bin
 
+    # This variant is not targeted at any particular client, clients are
+    # expected to declare their supported features in initialization options.
+    makeWrapper ${jre}/bin/java $out/bin/metals \
+      --prefix PATH : ${lib.makeBinPath [ jdk ]} \
+      --add-flags "${extraJavaOpts} -cp $CLASSPATH scala.meta.metals.Main"
+
+    # Further variants targeted at clients with featuresets pre-set.
     makeWrapper ${jre}/bin/java $out/bin/metals-emacs \
       --prefix PATH : ${lib.makeBinPath [ jdk ]} \
       --add-flags "${extraJavaOpts} -Dmetals.client=emacs -cp $CLASSPATH scala.meta.metals.Main"

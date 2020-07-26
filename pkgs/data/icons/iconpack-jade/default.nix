@@ -1,28 +1,26 @@
-{ stdenv, fetchFromGitHub, gtk3, hicolor-icon-theme }:
+{ stdenv, fetchFromGitHub, gtk3, gnome-icon-theme, hicolor-icon-theme }:
 
 stdenv.mkDerivation rec {
   pname = "iconpack-jade";
-  version = "1.22";
+  version = "1.23";
 
   src = fetchFromGitHub {
     owner = "madmaxms";
     repo = pname;
     rev = "v${version}";
-    sha256 = "1piypv8wdxnfiy6kgh7i3wi52m4fh4x874kh01qjmymssyirn17x";
+    sha256 = "1q29ikfssn1vmwws3dry4ssq6b44afd9sb7dwv3rdqg0frabpj1m";
   };
 
   nativeBuildInputs = [ gtk3 ];
 
-  propagatedBuildInputs = [ hicolor-icon-theme ];
+  propagatedBuildInputs = [ gnome-icon-theme hicolor-icon-theme ];
 
   dontDropIconThemeCache = true;
 
   installPhase = ''
-     mkdir -p $out/share/icons
-     cp -a Jade* $out/share/icons
-  '';
+    mkdir -p $out/share/icons
+    cp -a Jade* $out/share/icons
 
-  postFixup = ''
     for theme in $out/share/icons/*; do
       gtk-update-icon-cache $theme
     done

@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec {
   pname = "kanboard";
-  version = "1.2.13";
+  version = "1.2.15";
 
   src = fetchFromGitHub {
     owner = "kanboard";
     repo = "kanboard";
     rev = "v${version}";
-    sha256 = "0mm5sx323v1rwykd1dhvk4d3ipgvgvi3wvhrlavbja3lgay3mdwk";
+    sha256 = "0lib2qlc8a59i9dak0g1j5hymwbq9vhflp5srhcjislxypfvrizs";
   };
 
   dontBuild = true;

@@ -3,7 +3,10 @@ from contextlib import contextmanager, _GeneratorContextManager
 from queue import Queue, Empty
 from typing import Tuple, Any, Callable, Dict, Iterator, Optional, List
 from xml.sax.saxutils import XMLGenerator
+import queue
+import io
 import _thread
+import argparse
 import atexit
 import base64
 import codecs
@@ -19,6 +22,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 import unicodedata
 
 CHAR_TO_KEY = {
@@ -85,8 +89,6 @@ CHAR_TO_KEY = {
 }
 
 # Forward references
-nr_tests: int
-failed_tests: list
 log: "Logger"
 machines: "List[Machine]"
 
@@ -145,7 +147,7 @@ class Logger:
         self.logfile = os.environ.get("LOGFILE", "/dev/null")
         self.logfile_handle = codecs.open(self.logfile, "wb")
         self.xml = XMLGenerator(self.logfile_handle, encoding="utf-8")
-        self.queue: "Queue[Dict[str, str]]" = Queue(1000)
+        self.queue: "Queue[Dict[str, str]]" = Queue()
 
         self.xml.startDocument()
         self.xml.startElement("logfile", attrs={})
@@ -371,7 +373,7 @@ class Machine:
             q = q.replace("'", "\\'")
             return self.execute(
                 (
-                    "su -l {} -c "
+                    "su -l {} --shell /bin/sh -c "
                     "$'XDG_RUNTIME_DIR=/run/user/`id -u` "
                     "systemctl --user {}'"
                 ).format(user, q)
@@ -393,11 +395,11 @@ class Machine:
     def execute(self, command: str) -> Tuple[int, str]:
         self.connect()
 
-        out_command = "( {} ); echo '|!EOF' $?\n".format(command)
+        out_command = "( {} ); echo '|!=EOF' $?\n".format(command)
         self.shell.send(out_command.encode())
 
         output = ""
-        status_code_pattern = re.compile(r"(.*)\|\!EOF\s+(\d+)")
+        status_code_pattern = re.compile(r"(.*)\|\!=EOF\s+(\d+)")
 
         while True:
             chunk = self.shell.recv(4096).decode(errors="ignore")
@@ -600,11 +602,8 @@ class Machine:
                 shutil.copytree(host_src, host_intermediate)
             else:
                 shutil.copy(host_src, host_intermediate)
-            self.succeed("sync")
             self.succeed(make_command(["mkdir", "-p", vm_target.parent]))
             self.succeed(make_command(["cp", "-r", vm_intermediate, vm_target]))
-        # Make sure the cleanup is synced into VM
-        self.succeed("sync")
 
     def copy_from_vm(self, source: str, target_dir: str = "") -> None:
         """Copy a file from the VM (specified by an in-VM source path) to a path
@@ -622,7 +621,6 @@ class Machine:
             # Copy the file to the shared directory inside VM
             self.succeed(make_command(["mkdir", "-p", vm_shared_temp]))
             self.succeed(make_command(["cp", "-r", vm_src, vm_intermediate]))
-            self.succeed("sync")
             abs_target = out_dir / target_dir / vm_src.name
             abs_target.parent.mkdir(exist_ok=True, parents=True)
             # Copy the file from the shared directory outside VM
@@ -630,8 +628,6 @@ class Machine:
                 shutil.copytree(intermediate, abs_target)
             else:
                 shutil.copy(intermediate, abs_target)
-        # Make sure the cleanup is synced into VM
-        self.succeed("sync")
 
     def dump_tty_contents(self, tty: str) -> None:
         """Debugging: Dump the contents of the TTY<n>
@@ -678,6 +674,22 @@ class Machine:
 
         with self.nested("waiting for {} to appear on screen".format(regex)):
             retry(screen_matches)
+
+    def wait_for_console_text(self, regex: str) -> None:
+        self.log("waiting for {} to appear on console".format(regex))
+        # Buffer the console output, this is needed
+        # to match multiline regexes.
+        console = io.StringIO()
+        while True:
+            try:
+                console.write(self.last_lines.get())
+            except queue.Empty:
+                self.sleep(1)
+                continue
+            console.seek(0)
+            matches = re.search(regex, console.read())
+            if matches is not None:
+                return
 
     def send_key(self, key: str) -> None:
         key = CHAR_TO_KEY.get(key, key)
@@ -742,11 +754,16 @@ class Machine:
         self.monitor, _ = self.monitor_socket.accept()
         self.shell, _ = self.shell_socket.accept()
 
+        # Store last serial console lines for use
+        # of wait_for_console_text
+        self.last_lines: Queue = Queue()
+
         def process_serial_output() -> None:
             assert self.process.stdout is not None
             for _line in self.process.stdout:
                 # Ignore undecodable bytes that may occur in boot menus
                 line = _line.decode(errors="ignore").replace("\r", "").rstrip()
+                self.last_lines.put(line)
                 eprint("{} # {}".format(self.name, line))
                 self.logger.enqueue({"msg": line, "machine": self.name})
 
@@ -758,6 +775,11 @@ class Machine:
         self.booted = True
 
         self.log("QEMU running (pid {})".format(self.pid))
+
+    def cleanup_statedir(self) -> None:
+        self.log("delete the VM state directory")
+        if os.path.isfile(self.state_dir):
+            shutil.rmtree(self.state_dir)
 
     def shutdown(self) -> None:
         if not self.booted:
@@ -871,7 +893,8 @@ def run_tests() -> None:
             try:
                 exec(tests, globals())
             except Exception as e:
-                eprint("error: {}".format(str(e)))
+                eprint("error: ")
+                traceback.print_exc()
                 sys.exit(1)
     else:
         ptpython.repl.embed(locals(), globals())
@@ -882,38 +905,30 @@ def run_tests() -> None:
         if machine.is_up():
             machine.execute("sync")
 
-    if nr_tests != 0:
-        nr_succeeded = nr_tests - len(failed_tests)
-        eprint("{} out of {} tests succeeded".format(nr_succeeded, nr_tests))
-        if len(failed_tests) > 0:
-            eprint(
-                "The following tests have failed:\n - {}".format(
-                    "\n - ".join(failed_tests)
-                )
-            )
-            sys.exit(1)
-
 
 @contextmanager
 def subtest(name: str) -> Iterator[None]:
-    global nr_tests
-    global failed_tests
-
     with log.nested(name):
-        nr_tests += 1
         try:
             yield
             return True
         except Exception as e:
-            failed_tests.append(
-                'Test "{}" failed with error: "{}"'.format(name, str(e))
-            )
-            log.log("error: {}".format(str(e)))
+            log.log(f'Test "{name}" failed with error: "{e}"')
+            raise e
 
     return False
 
 
 if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "-K",
+        "--keep-vm-state",
+        help="re-use a VM state coming from a previous run",
+        action="store_true",
+    )
+    (cli_args, vm_scripts) = arg_parser.parse_known_args()
+
     log = Logger()
 
     vlan_nrs = list(dict.fromkeys(os.environ.get("VLANS", "").split()))
@@ -921,15 +936,14 @@ if __name__ == "__main__":
     for nr, vde_socket, _, _ in vde_sockets:
         os.environ["QEMU_VDE_SOCKET_{}".format(nr)] = vde_socket
 
-    vm_scripts = sys.argv[1:]
     machines = [create_machine({"startCommand": s}) for s in vm_scripts]
+    for machine in machines:
+        if not cli_args.keep_vm_state:
+            machine.cleanup_statedir()
     machine_eval = [
         "{0} = machines[{1}]".format(m.name, idx) for idx, m in enumerate(machines)
     ]
     exec("\n".join(machine_eval))
-
-    nr_tests = 0
-    failed_tests = []
 
     @atexit.register
     def clean_up() -> None:
@@ -939,7 +953,6 @@ if __name__ == "__main__":
                     continue
                 log.log("killing {} (pid {})".format(machine.name, machine.pid))
                 machine.process.kill()
-
             for _, _, process, _ in vde_sockets:
                 process.terminate()
         log.close()

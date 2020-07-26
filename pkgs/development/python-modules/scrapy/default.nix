@@ -23,10 +23,11 @@
 , sybil
 , pytest-twisted
 , botocore
+, itemadapter
 }:
 
 buildPythonPackage rec {
-  version = "2.0.1";
+  version = "2.2.1";
   pname = "Scrapy";
 
   disabled = isPy27;
@@ -55,14 +56,7 @@ buildPythonPackage rec {
     w3lib
     zope_interface
     protego
-  ];
-
-  patches = [
-    # Scrapy is usually installed via pip where copying all
-    # permissions makes sense. In Nix the files copied are owned by
-    # root and readonly. As a consequence scrapy can't edit the
-    # project templates.
-    ./permissions-fix.patch
+    itemadapter
   ];
 
   LC_ALL = "en_US.UTF-8";
@@ -78,7 +72,7 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "85581a01f4160a103ca9906ffa4e44474f4ecd1685f0934728892c58ebf111f6";
+    sha256 = "6a09beb5190bfdee2d72cf261822eae5d92fe8a86ac9ee1f55fc44b4864ca583";
   };
 
   postInstall = ''
