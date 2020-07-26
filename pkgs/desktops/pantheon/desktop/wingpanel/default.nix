@@ -20,13 +20,13 @@
 
 stdenv.mkDerivation rec {
   pname = "wingpanel";
-  version = "2.3.0";
+  version = "2.3.2";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "0m3pd4sf86kk1wv9asq4z2816bcal076vlk820mrdz9b2fm79lh3";
+    sha256 = "0sz3m64s5clirmiamx67iq42spba7sggcb29sny44z9f939vly4r";
   };
 
   passthru = {
@@ -63,6 +63,13 @@ stdenv.mkDerivation rec {
   postPatch = ''
     chmod +x meson/post_install.py
     patchShebangs meson/post_install.py
+  '';
+
+  preFixup = ''
+    gappsWrapperArgs+=(
+      # this theme is required
+      --prefix XDG_DATA_DIRS : "${elementary-gtk-theme}/share"
+    )
   '';
 
   meta = with stdenv.lib; {

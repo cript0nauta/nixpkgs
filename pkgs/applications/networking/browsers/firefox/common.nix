@@ -6,7 +6,8 @@
 , libjpeg, zlib, dbus, dbus-glib, bzip2, xorg
 , freetype, fontconfig, file, nspr, nss, libnotify
 , yasm, libGLU, libGL, sqlite, unzip, makeWrapper
-, hunspell, libXdamage, libevent, libstartup_notification, libvpx
+, hunspell, libXdamage, libevent, libstartup_notification
+, libvpx, libvpx_1_8
 , icu, libpng, jemalloc, glib
 , autoconf213, which, gnused, cargo, rustc, llvmPackages
 , rust-cbindgen, nodejs, nasm, fetchpatch
@@ -15,7 +16,7 @@
 
 ### backorted packages
 
-, nss_3_51
+, nss_3_52
 , sqlite_3_31_1
 
 ### optionals
@@ -49,6 +50,10 @@
 # macOS dependencies
 , xcbuild, CoreMedia, ExceptionHandling, Kerberos, AVFoundation, MediaToolbox
 , CoreLocation, Foundation, AddressBook, libobjc, cups, rsync
+
+# dependencies requires for stable backports
+
+, rust-cbindgen_0_14_1
 
 ## other
 
@@ -93,8 +98,9 @@ let
 # backported dependencies where the versions on the stable release did not meet
 # Firefoxs requirements
 
-nss_pkg = if lib.versionAtLeast ffversion "74" then nss_3_51 else nss;
+nss_pkg = if lib.versionAtLeast ffversion "74" then nss_3_52 else nss;
 sqlite_pkg = if lib.versionAtLeast ffversion "74" then sqlite_3_31_1 else sqlite;
+rust-cbindgen_pkg = if lib.versionAtLeast ffversion "77" then rust-cbindgen_0_14_1 else rust-cbindgen;
 
 in
 
@@ -121,8 +127,8 @@ stdenv.mkDerivation ({
     xorg.libX11 xorg.libXrender xorg.libXft xorg.libXt file
     libnotify xorg.pixman yasm libGLU libGL
     xorg.libXScrnSaver xorg.xorgproto
-    xorg.libXext sqlite_pkg unzip makeWrapper
-    libevent libstartup_notification libvpx /* cairo */
+    xorg.libXext unzip makeWrapper
+    libevent libstartup_notification /* cairo */
     icu libpng jemalloc glib
     nasm
     # >= 66 requires nasm for the AV1 lib dav1d
@@ -131,7 +137,8 @@ stdenv.mkDerivation ({
     # https://groups.google.com/forum/#!msg/mozilla.dev.platform/o-8levmLU80/SM_zQvfzCQAJ
     nspr nss_pkg
   ]
-
+  ++ lib.optionals  (lib.versionOlder ffversion "75") [ libvpx sqlite ]
+  ++ lib.optional  (lib.versionAtLeast ffversion "75.0") libvpx_1_8
   ++ lib.optional  alsaSupport alsaLib
   ++ lib.optional  pulseaudioSupport libpulseaudio # only headers are needed
   ++ lib.optional  gtk3Support gtk3
@@ -149,7 +156,6 @@ stdenv.mkDerivation ({
     "-Wno-error=format-security");
 
   postPatch = ''
-    substituteInPlace third_party/prio/prio/rand.c --replace 'nspr/prinit.h' 'prinit.h'
     rm -rf obj-x86_64-pc-linux-gnu
   '';
 
@@ -164,7 +170,7 @@ stdenv.mkDerivation ({
       pkgconfig
       python2
       python3
-      rust-cbindgen
+      rust-cbindgen_pkg
       rustc
       which
     ]
@@ -219,7 +225,6 @@ stdenv.mkDerivation ({
     "--with-system-icu"
     "--enable-system-ffi"
     "--enable-system-pixman"
-    "--enable-system-sqlite"
     #"--enable-system-cairo"
     "--enable-startup-notification"
     #"--enable-content-sandbox" # TODO: probably enable after 54
@@ -234,6 +239,7 @@ stdenv.mkDerivation ({
     "--with-system-nspr"
     "--with-system-nss"
   ]
+  ++ lib.optional (lib.versionOlder ffversion "75") "--enable-system-sqlite"
   ++ lib.optional (stdenv.isDarwin) "--disable-xcode-checks"
   ++ lib.optionals (lib.versionOlder ffversion "69") [
     "--enable-webrender=build"

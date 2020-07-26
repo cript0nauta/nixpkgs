@@ -1,5 +1,6 @@
 { lib
 , buildPythonPackage
+, pythonAtLeast
 , fetchFromGitHub
 , pyparsing
 , pytest
@@ -8,6 +9,7 @@
 buildPythonPackage rec {
   pname = "svgwrite";
   version = "1.3.1";
+  disabled = pythonAtLeast "3.8";
 
   src = fetchFromGitHub {
     owner = "mozman";

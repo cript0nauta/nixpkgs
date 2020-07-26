@@ -62,6 +62,8 @@ in
       else [ gtk2 at-spi2-atk wrapGAppsHook ] ++ atomEnv.packages)
         ++ [ libsecret libXScrnSaver ];
 
+    runtimeDependencies = lib.optional (stdenv.isLinux) [ systemd.lib fontconfig.lib ];
+
     nativeBuildInputs = lib.optional (!stdenv.isDarwin) autoPatchelfHook;
 
     dontBuild = true;
@@ -75,8 +77,6 @@ in
       '' else ''
         mkdir -p $out/lib/vscode $out/bin
         cp -r ./* $out/lib/vscode
-
-        substituteInPlace $out/lib/vscode/bin/${executableName} --replace '"$CLI" "$@"' '"$CLI" "--skip-getting-started" "$@"'
 
         ln -s $out/lib/vscode/bin/${executableName} $out/bin
 
@@ -93,10 +93,6 @@ in
         sed -i "/ELECTRON=/iVSCODE_PATH='$out/lib/vscode'" $out/bin/${executableName}
         grep -q "VSCODE_PATH='$out/lib/vscode'" $out/bin/${executableName} # check if sed succeeded
       '';
-
-    preFixup = lib.optionalString (system == "i686-linux" || system == "x86_64-linux") ''
-      gappsWrapperArgs+=(--prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ systemd fontconfig ]})
-    '';
 
     inherit meta;
   }

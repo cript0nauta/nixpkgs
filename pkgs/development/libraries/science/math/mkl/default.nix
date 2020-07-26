@@ -1,4 +1,12 @@
-{ stdenvNoCC, fetchurl, rpmextract, undmg, darwin, enableStatic ? false }:
+{ stdenvNoCC
+, fetchurl
+, pkgconfig
+, rpmextract
+, undmg
+, darwin
+, enableStatic ? false
+}:
+
 /*
   For details on using mkl as a blas provider for python packages such as numpy,
   numexpr, scipy, etc., see the Python section of the NixPkgs manual.
@@ -11,8 +19,8 @@ let
   # Darwin is pinned to 2019.3 because the DMG does not unpack; see here for details:
   # https://github.com/matthewbauer/undmg/issues/4
   year = if stdenvNoCC.isDarwin then "2019" else "2020";
-  spot = if stdenvNoCC.isDarwin then "3" else "0";
-  rel = if stdenvNoCC.isDarwin then "199" else "166";
+  spot = if stdenvNoCC.isDarwin then "3" else "1";
+  rel = if stdenvNoCC.isDarwin then "199" else "217";
 
   rpm-ver = "${year}.${spot}-${rel}-${year}.${spot}-${rel}";
 
@@ -32,8 +40,8 @@ in stdenvNoCC.mkDerivation {
       })
     else
       (fetchurl {
-        url = "https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16318/l_mkl_${version}.tgz";
-        sha256 = "1q4ab87qzraksn8mm4117vj7l3sgpdi2qszj7nx122zi7zmjvngn";
+        url = "https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16533/l_mkl_${version}.tgz";
+        sha256 = "0v86hrqg15mbc78m9qk8dbkaaq3mlwashgbf9n79kxpl1gilnah8";
       });
 
   nativeBuildInputs = if stdenvNoCC.isDarwin
@@ -41,6 +49,10 @@ in stdenvNoCC.mkDerivation {
       [ undmg darwin.cctools ]
     else
       [ rpmextract ];
+
+  installCheckInputs = [ pkgconfig ];
+
+  doInstallCheck = true;
 
   buildPhase = if stdenvNoCC.isDarwin then ''
     for f in Contents/Resources/pkg/*.tgz; do
@@ -75,6 +87,7 @@ in stdenvNoCC.mkDerivation {
       bn=$(basename $f)
       substituteInPlace $f \
         --replace "prefix=<INSTALLDIR>/mkl" "prefix=$out" \
+        --replace $\{MKLROOT} "$out" \
         --replace "lib/intel64_lin" "lib"
     done
 
@@ -123,6 +136,11 @@ in stdenvNoCC.mkDerivation {
     install_name_tool -change @rpath/libiomp5.dylib $out/lib/libiomp5.dylib $out/lib/libmkl_intel_thread.dylib
     install_name_tool -change @rpath/libtbb.dylib $out/lib/libtbb.dylib $out/lib/libmkl_tbb_thread.dylib
     install_name_tool -change @rpath/libtbbmalloc.dylib $out/lib/libtbbmalloc.dylib $out/lib/libtbbmalloc_proxy.dylib
+  '';
+
+  # Validate pkgconfig files, since they break often on updates.
+  installCheckPhase = ''
+    pkg-config --validate $out/lib/pkgconfig/*.pc
   '';
 
   # Per license agreement, do not modify the binary

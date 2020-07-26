@@ -1427,6 +1427,16 @@
     githubId = 5684605;
     name = "Cole Scott";
   };
+  cole-h = {
+    name = "Cole Helbling";
+    email = "cole.e.helbling@outlook.com";
+    github = "cole-h";
+    githubId = 28582702;
+    keys = [{
+      longkeyid = "rsa4096/0xB37E0F2371016A4C";
+      fingerprint = "68B8 0D57 B2E5 4AC3 EC1F  49B0 B37E 0F23 7101 6A4C";
+    }];
+  };
   copumpkin = {
     email = "pumpkingod@gmail.com";
     github = "copumpkin";
@@ -3908,6 +3918,12 @@
     githubId = 10544;
     name = "Giuluo Eulisse";
   };
+  kthielen = {
+    email = "kthielen@gmail.com";
+    github = "kthielen";
+    githubId = 1409287;
+    name = "Kalani Thielen";
+  };
   ktor = {
     email = "kruszewsky@gmail.com";
     github = "ktor";
@@ -3996,6 +4012,12 @@
     github = "lblasc";
     githubId = 32152;
     name = "Luka Blaskovic";
+  };
+  lbpdt = {
+    email = "nix@pdtpartners.com";
+    github = "lbpdt";
+    githubId = 45168934;
+    name = "Louis Blin";
   };
   ldelelis = {
     email = "ldelelis@est.frba.utn.edu.ar";
@@ -7452,6 +7474,12 @@
     github = "valeriangalliat";
     name = "Valérian Galliat";
   };
+  valodim = {
+    email = "look@my.amazin.horse";
+    github = "valodim";
+    githubId = 27813;
+    name = "Vincent Breitmoser";
+  };
   vandenoever = {
     email = "jos@vandenoever.info";
     github = "vandenoever";
@@ -7633,6 +7661,12 @@
     github = "vyp";
     githubId = 3889405;
     name = "vyp";
+  };
+  wamserma = {
+    name = "Markus S. Wamser";
+    email = "github-dev@mail2013.wamser.eu";
+    github = "wamserma";
+    githubId = 60148;
   };
   waynr = {
     name = "Wayne Warren";

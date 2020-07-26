@@ -2,11 +2,14 @@
 , buildPythonPackage
 , fetchPypi
 , pytest
+, isPy38
 }:
 
 buildPythonPackage rec {
   pname = "namedlist";
   version = "1.7";
+
+  disabled = isPy38;
 
   src = fetchPypi {
     inherit pname version;

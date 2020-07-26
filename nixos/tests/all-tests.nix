@@ -22,7 +22,7 @@ let
 in
 {
   _3proxy = handleTest ./3proxy.nix {};
-  acme = handleTestOn ["x86_64-linux"] ./acme.nix {};
+  acme = handleTest ./acme.nix {};
   atd = handleTest ./atd.nix {};
   automysqlbackup = handleTest ./automysqlbackup.nix {};
   avahi = handleTest ./avahi.nix {};
@@ -51,6 +51,7 @@ in
   codimd = handleTest ./codimd.nix {};
   consul = handleTest ./consul.nix {};
   containers-bridge = handleTest ./containers-bridge.nix {};
+  containers-nixpkgs-overlays.nix = handleTest ./containers-nixpkgs-overlays.nix {};
   containers-ephemeral = handleTest ./containers-ephemeral.nix {};
   containers-extra_veth = handleTest ./containers-extra_veth.nix {};
   containers-hosts = handleTest ./containers-hosts.nix {};

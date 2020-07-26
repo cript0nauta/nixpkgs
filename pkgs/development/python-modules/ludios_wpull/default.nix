@@ -2,6 +2,7 @@
 , buildPythonPackage
 , fetchFromGitHub
 , isPy3k
+, isPy38
 , chardet
 , dnspython
 , html5-parser
@@ -16,7 +17,7 @@ buildPythonPackage rec {
   pname = "ludios_wpull";
   version = "3.0.7";
 
-  disabled = !isPy3k;
+  disabled = !isPy3k || isPy38;
 
   src = fetchFromGitHub {
     rev = version;

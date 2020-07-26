@@ -1,4 +1,4 @@
-{ config, stdenv, lib, callPackage, fetchurl }:
+{ config, stdenv, lib, callPackage, fetchurl, fetchpatch }:
 
 let
   common = opts: callPackage (import ./common.nix opts) {};
@@ -7,14 +7,14 @@ in
 rec {
   firefox = common rec {
     pname = "firefox";
-    ffversion = "74.0.1";
+    ffversion = "77.0.1";
     src = fetchurl {
       url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "3aycj3wllsz97x30dxngpbwryqss209cisj91vs1yfgspp8nbl148fk37id6bgl33hga1irc4zxx7glmymibymkfkrmy0xx803w8dy4";
+      sha512 = "ngLihC0YuclLJEV3iPEX+tRzDKIdBe+CCOuFxvWNo7DnX8royOvTj2m4YyWyZoTQ5UCbPTQYmP4otgfovZSe8g==";
     };
 
     patches = [
-      ./no-buildconfig-ffx65.patch
+      ./no-buildconfig-ffx76.patch
     ];
 
     meta = {
@@ -35,10 +35,10 @@ rec {
 
   firefox-esr-68 = common rec {
     pname = "firefox-esr";
-    ffversion = "68.6.1esr";
+    ffversion = "68.10.0esr";
     src = fetchurl {
       url = "mirror://mozilla/firefox/releases/${ffversion}/source/firefox-${ffversion}.source.tar.xz";
-      sha512 = "1xg2hdk50ys9np5a0jdwr2wb543sq8ibmvr05h9apmb4yn1hhz3ml9yq9r4v2di4hnb3s181zvq4np5srka2v6aqz8rk7cq46096fls";
+      sha512 = "xcGDNWA2SFHnz46lFlm8T7YCOblgElzbIP4x90LXV//a748xT4ANyRIU7o41gDPcKvlxwIu7pHTvYVixAYgWUw==";
     };
 
     patches = [
